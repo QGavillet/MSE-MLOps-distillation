@@ -65,7 +65,7 @@ def train_func(config):
         running_loss = 0.0
         for i, (images, labels) in enumerate(train_loader):
             images, labels = images.to(ray.train.torch.get_device()), labels.to(ray.train.torch.get_device())
-            teacher_preds_batch = teacher_predictions[i * 64:(i + 1) * 64]
+            teacher_preds_batch = teacher_predictions[i * config["batch_size"]:(i + 1) * config["batch_size"]]
 
             student_optimizer.zero_grad()
             outputs = student(images)
