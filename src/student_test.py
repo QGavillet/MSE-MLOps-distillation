@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
+
 # Evaluate the model
 def evaluate_model(model):
     test_data = load_test_data()
@@ -31,10 +32,11 @@ def evaluate_model(model):
     print(f"F1 Score: {f1:.4f}")
 
 
-# Load the trained model
-trained_model = StudentModel()
-trained_model = torch.nn.DataParallel(trained_model)
-trained_model.load_state_dict(torch.load("./models/student/model.pt"))
+if __name__ == '__main__':
+    # Load the trained model
+    trained_model = StudentModel()
+    trained_model = torch.nn.DataParallel(trained_model)
+    trained_model.load_state_dict(torch.load("./models/student.pt"))
 
-# Evaluate the model
-evaluate_model(trained_model)
+    # Evaluate the model
+    evaluate_model(trained_model)

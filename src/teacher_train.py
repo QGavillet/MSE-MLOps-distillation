@@ -9,7 +9,6 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-
 from utils.utils import load_train_data, get_scaling_config
 from utils.utils import TeacherModel
 
@@ -26,7 +25,7 @@ def train_func(config):
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
     train_data = load_train_data()
-    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
 
     for epoch in range(config["epochs"]):
@@ -51,7 +50,6 @@ def train_func(config):
             )
 
 
-
 if __name__ == '__main__':
     ray.init()
 
@@ -63,20 +61,20 @@ if __name__ == '__main__':
         train_func,
         scaling_config=scaling_config,
         train_loop_config={
-            "epochs" : 1,
-            "lr" : 0.001,
-            "batch_size" : 64
+            "epochs": 1,
+            "lr": 0.001,
+            "batch_size": 64
         }
     )
     result = trainer.fit()
 
     # Ensure the model folder exists
-    model_save_path = "./models/teacher"
+    model_save_path = "./models"
     os.makedirs(model_save_path, exist_ok=True)
 
     # Copy the trained model to ./model
     with result.checkpoint.as_directory() as checkpoint_dir:
-        model_file_path = os.path.join(model_save_path, "model.pt")
+        model_file_path = os.path.join(model_save_path, "teacher.pt")
         shutil.copyfile(os.path.join(checkpoint_dir, "model.pt"), model_file_path)
 
     # result.metrics  # The metrics reported during training.
