@@ -1,0 +1,15 @@
+name: showcase run ray job on k8s Raycluster
+run-name: ${{ github.actor }} is running ray job on k8s Raycluster
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: python:3.9.20
+    steps:
+      - run: apk update
+      - run: pip install "ray[data,train,tune,serve]==2.38.0"
+      - run: echo $K8S_CONFIG | base64 -d > kubeconfig.txt
+      - run: export KUBECONFIG=$(pwd)/kubeconfig.txt
+      - run: kubectl get nodes
+      - run: kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265
+      - run: ray job submit --address http://localhost:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+
