@@ -1,10 +1,18 @@
-name: showcase run ray job on k8s Raycluster
-run-name: ${{ github.actor }} is running ray job on k8s Raycluster
+name: ray-cluster-test
+
 on: [push]
+
 jobs:
-  Explore-GitHub-Actions:
-    runs-on: python:3.9.20
+  build:
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        # This is the version of the action for setting up Python, not the Python version.
+        uses: actions/setup-python@v5
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.9.20'
       - run: apk update
       - run: pip install "ray[data,train,tune,serve]==2.38.0"
       - run: echo $K8S_CONFIG | base64 -d > kubeconfig.txt
