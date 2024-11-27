@@ -24,8 +24,8 @@ jobs:
         run: |
           echo $K8S_CONFIG | base64 -d > kubeconfig.txt
           export KUBECONFIG=$(pwd)/kubeconfig.txt
-          kubectl get nodes
-          kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265
+          kubectl get nodes -n ray
+          kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 -n ray
 
       - name: Run ray job
         run: ray job submit --address http://localhost:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
