@@ -22,9 +22,15 @@ jobs:
 
       - name: Set up kubectl
         run: |
+          echo "Checking K8S_CONFIG variable"
+          if [ -z "$K8S_CONFIG" ]; then
+            echo "K8S_CONFIG is not set!"
+            exit 1
+          fi
           echo $K8S_CONFIG | base64 -d > kubeconfig.txt
+          cat kubeconfig.txt
           export KUBECONFIG=$(pwd)/kubeconfig.txt
-          kubectl cluster-info
+          kubectl cluster-info       
 
       - name: Port forward to ray head
         run: |
