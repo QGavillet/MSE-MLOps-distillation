@@ -1,4 +1,4 @@
-# File name: serve_quickstart.py
+# File name: ray_serve.py
 from starlette.requests import Request
 
 import ray
