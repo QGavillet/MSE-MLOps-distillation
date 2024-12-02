@@ -1,3 +1,6 @@
+import random
+import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
@@ -26,6 +29,13 @@ def load_test_data():
 
 def get_scaling_config():
     return ScalingConfig(num_workers=2, use_gpu=False)
+
+def set_seed(seed):
+    torch.backends.cudnn.deterministic = True
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 
 # Define the Teacher Model
