@@ -21,22 +21,23 @@ jobs:
           python -m pip install "ray[data,train,tune,serve]==2.38.0"
 
       - name: Set up kubectl
-        run: |
-          echo "Checking K8S_CONFIG variable"
-          if [ -z "$K8S_CONFIG" ]; then
-            echo "K8S_CONFIG is not set!"
-            exit 1
-          fi
-          echo $K8S_CONFIG | base64 -d > kubeconfig.txt
-          cat kubeconfig.txt
-          export KUBECONFIG=$(pwd)/kubeconfig.txt
-          kubectl cluster-info       
+        run: |           
+          mkdir -p ~/.kube
+          echo $K8S_CONFIG | base64 -d > ~/.kube/config
+        env:
+          K8S_CONFIG: ${{ secrets.K8S_CONFIG }}
 
-      - name: Port forward to ray head
+      - name: Start port-forward
         run: |
-          nohup kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 -n ray &
+          kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
           sleep 5
+          if ! nc -z localhost 8265; then
+              echo "Port-forward failed to start. Logs:"
+              cat port-forward.log
+              exit 1
+          fi
 
       - name: Run ray job
-        run: ray job submit --address http://localhost:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
+        run: |
+          ray job submit --address http://localhost:8265 -- python -c "import ray; ray.init(); print(ray.cluster_resources())"
 
