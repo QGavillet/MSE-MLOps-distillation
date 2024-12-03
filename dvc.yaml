@@ -1,0 +1,35 @@
+stages:
+  teacher_train:
+    cmd: python src/teacher_train.py
+    deps:
+    - src/teacher_train.py
+    #outs:
+    #- metrics/teacher_train.json
+
+  teacher_test:
+    cmd: python src/teacher_test.py
+    deps:
+    - src/teacher_test.py
+    - models/teacher.pt
+    outs:
+    - data/teacher.npy
+    #- metrics/teacher_test.json
+
+  student_train:
+    cmd: python src/student_train.py
+    deps:
+      - src/student_train.py
+      - data/teacher.npy
+    #outs:
+      #- metrics/student_train.json
+
+  student_test:
+    cmd: python src/student_test.py
+    deps:
+      - src/student_test.py
+      - models/student.pt
+    #outs:
+      #- data/student.npy
+      #- metrics/student_test.json
+
+

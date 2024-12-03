@@ -1,0 +1,5 @@
+outs:
+- md5: 6b0a7a9c05955521caceefe57a8c2284
+  size: 2183208
+  hash: md5
+  path: teacher.pt

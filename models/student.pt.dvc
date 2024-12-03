@@ -1,0 +1,5 @@
+outs:
+- md5: 58c2b0157762a53d813253b7406fc4cb
+  size: 140968
+  hash: md5
+  path: student.pt

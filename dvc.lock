@@ -1,0 +1,39 @@
+schema: '2.0'
+stages:
+  teacher_train:
+    cmd: python src/teacher_train.py
+    deps:
+    - path: src/teacher_train.py
+      hash: md5
+      md5: e2ee93394aeae601f70172762eec1a30
+      size: 2928
+  teacher_test:
+    cmd: python src/teacher_test.py
+    deps:
+    - path: src/teacher_test.py
+      hash: md5
+      md5: 7308c889d8bd41323ae44beb671ca7bb
+      size: 2083
+    outs:
+    - path: data/teacher.npy
+      hash: md5
+      md5: f9243e3234b5f1c06abbbea4d3ab09c0
+      size: 2000128
+  student_train:
+    cmd: python src/student_train.py
+    deps:
+    - path: data/teacher.npy
+      hash: md5
+      md5: f9243e3234b5f1c06abbbea4d3ab09c0
+      size: 2000128
+    - path: src/student_train.py
+      hash: md5
+      md5: bb0c8921b67a5b630e9f07b16a06fb6a
+      size: 4276
+  student_test:
+    cmd: python src/student_test.py
+    deps:
+    - path: src/student_test.py
+      hash: md5
+      md5: 8be0897e1e363591ab3eac9aace25335
+      size: 1350
