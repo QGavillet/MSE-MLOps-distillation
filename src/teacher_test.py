@@ -82,7 +82,7 @@ def create_dataset(model, data_path):
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser(description="Test a teacher model and create dataset for student model.")
-    parser.add_argument("--model_path", type=str, help="Path to the teacher model.")
+    parser.add_argument("--model_path", type=str, default="./models/teacher.pt", help="Path to the teacher model.")
     parser.add_argument("--output_folder", type=str, default="./data", help="Folder to save the dataset")
     args = parser.parse_args()
 

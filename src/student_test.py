@@ -63,7 +63,7 @@ def evaluate_model(model):
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser(description="Train a student model with knowledge distillation.")
-    parser.add_argument("--model_path", type=str, help="Path to the student model.")
+    parser.add_argument("--model_path", type=str, default="./models/student.pt", help="Path to the student model.")
     args = parser.parse_args()
 
     # Load the trained model

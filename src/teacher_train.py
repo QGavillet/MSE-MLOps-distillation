@@ -103,8 +103,7 @@ if __name__ == '__main__':
 
     # Copy the trained model to ./model
     with result.checkpoint.as_directory() as checkpoint_dir:
-        model_name = "teacher_" + now + ".pt"
-        model_file_path = os.path.join(model_save_path, model_name)
+        model_file_path = os.path.join(model_save_path, "teacher.pt")
         shutil.copyfile(os.path.join(checkpoint_dir, "model.pt"), model_file_path)
 
 
