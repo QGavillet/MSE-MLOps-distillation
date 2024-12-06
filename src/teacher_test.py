@@ -1,10 +1,9 @@
 import argparse
+import json
 import os
 from datetime import datetime
-
 import pytz
 from matplotlib import pyplot as plt
-
 from utils.utils import load_test_data, load_train_data
 from utils.utils import TeacherModel
 import numpy as np
@@ -57,8 +56,15 @@ def evaluate_model(model):
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_test_" + now
     wandb.init(project="MSE-MLOps-distillation", name=exp_name)
-    wandb.log({"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1})
+    metrics = {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
+    wandb.log(metrics)
     wandb.log({"confusion_matrix": wandb.Image(plt)})
+
+    # Save files
+    folder_name = "metrics/teacher/"
+    plt.savefig(folder_name + "confusion_matrix.png")
+    with open(folder_name + "metrics.json", "w") as f:
+        json.dump(metrics, f)
 
 
 def create_dataset(model, data_path):

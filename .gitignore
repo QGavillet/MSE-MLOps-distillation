@@ -1,6 +1,8 @@
 .idea
 
 wandb
+metrics/*
+!metrics/*.dvc
 
 models/*
 !models/*.dvc

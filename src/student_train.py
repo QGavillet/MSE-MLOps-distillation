@@ -7,8 +7,10 @@ import ray.train as train
 import ray.train.torch
 import os
 import tempfile
+import yaml
 import torch
 import torch.nn as nn
+from matplotlib import pyplot as plt
 from ray.air.integrations.wandb import setup_wandb
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -17,9 +19,9 @@ import ray.train.torch
 from utils.utils import load_train_data, StudentModel, get_scaling_config, set_seed
 import torch.nn.functional as F
 
+
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 # Distillation loss function
 def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha=0.5):
@@ -38,8 +40,11 @@ def train_func(config):
 
     # Transform and DataLoader
     train_data = load_train_data()
+    student_val_data = load_train_data()
     student_train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False)
+    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
+    student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
 
     # Load teacher dataset
     teacher_data_shard = train.get_dataset_shard("teacher_dataset")
@@ -56,11 +61,7 @@ def train_func(config):
     alpha = config["alpha"]
 
     # wb log
-    wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False)
-
-    wb_config = config.copy()
-    wb_config.pop("exp_name")
-    wb.log({"config": wb_config})
+    wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False, config=config)
 
     for epoch in range(epochs):
         student.train()
@@ -80,16 +81,45 @@ def train_func(config):
 
             running_loss += loss.item()
 
-        avg_loss = running_loss / len(student_train_loader)
+        avg_train_loss = running_loss / len(student_train_loader)
+
+        # Validation loop
+        student.eval()
+        criterion = nn.CrossEntropyLoss()
+        running_val_loss = 0.0
+        with torch.no_grad():
+            for images, labels in student_val_loader:
+                outputs = student(images)
+                loss = criterion(outputs, labels)
+                running_val_loss += loss.item()
+
+        avg_val_loss = running_val_loss / len(student_val_loader)
 
         # Save checkpoint to a temporary directory
         with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
             torch.save(student.state_dict(), os.path.join(temp_checkpoint_dir, "model.pt"))
             ray.train.report(
-                metrics={"loss": avg_loss, "epoch": epoch},
+                metrics={"loss": avg_train_loss, "val_loss": avg_val_loss},
                 checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
             )
-            wb.log({"loss": avg_loss})
+            wb.log({"loss": avg_train_loss, "val_loss": avg_val_loss})
+
+
+def get_training_plot(df_history) -> plt.Figure:
+    """Plot the training and validation loss"""
+    epochs = range(1, len(df_history["loss"]) + 1)
+
+    fig = plt.figure(figsize=(10, 4))
+    plt.plot(epochs, df_history["loss"], label="Training loss")
+    plt.plot(epochs, df_history["val_loss"], label="Validation loss")
+    plt.xticks(epochs)
+    plt.title("Training and validation loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
+
+    return fig
 
 
 if __name__ == '__main__':
@@ -114,17 +144,18 @@ if __name__ == '__main__':
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "student_train_" + now
+    train_params = yaml.safe_load(open("params.yaml"))["train-student"]
 
     # Launch distributed training with Ray
     trainer = ray.train.torch.TorchTrainer(
         train_func,
         scaling_config=scaling_config,
         train_loop_config={
-            "epochs": 1,
-            "lr": 0.001,
-            "batch_size": 64,
-            "temperature": 3,
-            "alpha": 0.8,
+            "epochs": train_params["epochs"],
+            "lr": train_params["lr"],
+            "batch_size": train_params["batch_size"],
+            "temperature": train_params["temperature"],
+            "alpha": train_params["alpha"],
             "exp_name": exp_name,
         },
         datasets={
@@ -145,5 +176,12 @@ if __name__ == '__main__':
     with result.checkpoint.as_directory() as checkpoint_dir:
         model_file_path = os.path.join(model_save_path, "student.pt")
         shutil.copyfile(os.path.join(checkpoint_dir, "model.pt"), model_file_path)
+
+    # save metrics in json file
+    metrics_folder = "metrics/student"
+    os.makedirs(metrics_folder, exist_ok=True)
+
+    fig = get_training_plot(result.metrics_dataframe)
+    fig.savefig(os.path.join(metrics_folder, "training_plot.png"))
 
     print(f"Training completed. Model saved to {model_file_path}")
