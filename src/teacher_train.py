@@ -18,6 +18,7 @@ from ray.air.integrations.wandb import setup_wandb
 from utils.utils import load_train_data, get_scaling_config, set_seed
 from utils.utils import TeacherModel
 
+
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

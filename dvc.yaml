@@ -8,6 +8,7 @@ stages:
     - train-teacher
     outs:
     - models/teacher.pt
+    plots:
     - metrics/teacher/training_plot.png
 
   teacher_test:
@@ -17,7 +18,9 @@ stages:
     - models/teacher.pt
     outs:
     - data/teacher.npy
+    metrics:
     - metrics/teacher/metrics.json
+    plots:
     - metrics/teacher/confusion_matrix.png
 
   student_train:
@@ -28,6 +31,7 @@ stages:
       - data/teacher.npy
     outs:
     - models/student.pt
+    plots:
     - metrics/student/training_plot.png
 
   student_test:
@@ -35,8 +39,9 @@ stages:
     deps:
       - src/student_test.py
       - models/student.pt
-    outs:
+    metrics:
       - metrics/student/metrics.json
+    plots:
       - metrics/student/confusion_matrix.png
 
 

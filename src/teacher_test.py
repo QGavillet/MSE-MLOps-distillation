@@ -14,6 +14,7 @@ from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import wandb
 
+
 # Evaluate the model
 def evaluate_model(model):
     test_data = load_test_data()
