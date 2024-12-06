@@ -36,6 +36,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: DVC repro
+        run: dvc repro
       - name: Setup CML
         uses: iterative/setup-cml@v2
         with:
