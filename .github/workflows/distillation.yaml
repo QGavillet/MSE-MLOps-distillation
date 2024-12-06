@@ -20,7 +20,7 @@ permissions:
 jobs:
   report:
     permissions: write-all
-    runs-on: [self-hosted, gpu-runner]
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
