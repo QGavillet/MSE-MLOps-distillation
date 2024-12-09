@@ -26,7 +26,7 @@ logging_config:
 
 applications:
 
-- name: mobilenetv2
+- name: student
 
   route_prefix: /
 
@@ -34,15 +34,16 @@ applications:
 
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/heads/ray_serve.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/tags/testStudent.zip"
     pip:
       # Ref to github raw file
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
 
   deployments:
 
-  - name: MobileNetV2Classifier
-    num_replicas: 2
+  - name: CIFAR10MobileNetV2Classifier
+    num_replicas: 1
     ray_actor_options:
       num_cpus: 0.8
       num_gpus: 0.0
+      memory: 1.0

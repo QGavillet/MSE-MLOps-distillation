@@ -7,7 +7,7 @@ from torchvision import models, transforms
 from PIL import Image
 import io
 
-@serve.deployment(num_replicas=2, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0})
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 1})
 class CIFAR10MobileNetV2Classifier:
     def __init__(self):
         # Pre-trained MobileNetV2 on ImageNet
