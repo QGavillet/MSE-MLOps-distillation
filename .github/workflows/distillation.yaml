@@ -104,6 +104,6 @@ jobs:
           echo '![](./dvc_plots/static/workspace_metrics_student_confusion_matrix.png "Confusion Matrix")' >> report.md
 
           # Publish the CML report
-          cml comment update --target=pr --publish report.md
+          cml comment update --target=commit --publish report.md
       - name : Update metrics
         run : dvc push
