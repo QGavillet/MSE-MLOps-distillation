@@ -7,3 +7,4 @@ scipy==1.13.1
 scikit-learn==1.5.2
 wandb==0.18.7
 seaborn==0.13.2
+transformers==4.47.0

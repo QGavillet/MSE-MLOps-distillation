@@ -1,10 +1,16 @@
+import ray
+from utils.ray_utils import get_ray_runtime_env
+
+ray.init(runtime_env=get_ray_runtime_env())
+
+import ray.train as train
+from ray.air.integrations.wandb import setup_wandb
+import ray.train.torch
 import argparse
 import shutil
 from datetime import datetime
 import yaml
 import pytz
-import ray.train as train
-import ray.train.torch
 import os
 import tempfile
 import torch
@@ -12,15 +18,11 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-import ray
-import ray.train.torch
-from ray.air.integrations.wandb import setup_wandb
-from utils.utils import load_train_data, get_scaling_config, set_seed
-from utils.utils import TeacherModel
-
+from utils.utils import load_train_data, set_seed, TeacherModel
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def train_func(config):
     model = TeacherModel()
@@ -97,8 +99,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     set_seed(16)
-
-    ray.init()
 
     # Configure scaling and resource requirements
     scaling_config = get_scaling_config()
