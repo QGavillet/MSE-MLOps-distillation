@@ -30,12 +30,21 @@ jobs:
         with:
           python-version: '3.9'
           cache: pip
+      - name: Login to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
       - name: Install dependencies
         run: pip install -r requirements.txt
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: DVC Pull
+        run: dvc repro --pull teacher_test student_test
+
       - name: Setup CML
         uses: iterative/setup-cml@v2
         with:
