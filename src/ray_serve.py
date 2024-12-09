@@ -7,8 +7,11 @@ from torchvision import models, transforms
 from PIL import Image
 import io
 
-@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 1})
-class CIFAR10MobileNetV2Classifier:
+from transformers import AutoImageProcessor, AutoModelForImageClassification
+
+
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024 }, name="student")
+class StudentClassifier:
     def __init__(self):
         # Pre-trained MobileNetV2 on ImageNet
         self.model = models.mobilenet_v2(weights="IMAGENET1K_V1")
@@ -68,5 +71,57 @@ class CIFAR10MobileNetV2Classifier:
         self.my_counter.inc()
         return prediction
 
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="teacher")
+class TeacherClassifier:
+    def __init__(self):
+        # Load the image processor and model from the teacher directory
+        self.processor = AutoImageProcessor.from_pretrained("../teacher")
+        self.model = AutoModelForImageClassification.from_pretrained("../teacher")
+        self.model.eval()
 
-mobilenet_app = CIFAR10MobileNetV2Classifier.bind()
+        # If the model config has id2label, use it. Otherwise, define your own labels.
+        if hasattr(self.model.config, "id2label") and self.model.config.id2label:
+            # Convert the id2label dictionary into a list sorted by key
+            self.class_names = [self.model.config.id2label[i] for i in range(len(self.model.config.id2label))]
+        else:
+            # If no labels are defined in the config, fallback to CIFAR-10 classes or your own defined set.
+            self.class_names = [
+                "airplane", "automobile", "bird", "cat", "deer",
+                "dog", "frog", "horse", "ship", "truck"
+            ]
+
+        # Set up a counter metric for requests
+        self.my_counter = metrics.Counter(
+            "teacher_model_counter",
+            description="Number of requests served by this teacher deployment.",
+            tag_keys=("model",),
+        )
+        self.my_counter.set_default_tags({"model": "teacher_model"})
+
+    def predict(self, image_bytes: bytes) -> str:
+        # Convert the image bytes into a PIL image
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        # Process the image using the teacher’s processor
+        inputs = self.processor(images=image, return_tensors="pt")
+
+        # Run inference
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            logits = outputs.logits
+            probabilities = F.softmax(logits, dim=-1)
+            top_prob, top_idx = probabilities[0].max(dim=0)
+
+        # Return the predicted class name
+        predicted_label = self.class_names[top_idx.item()]
+        return predicted_label
+
+    async def __call__(self, request: Request) -> str:
+        # Expect the request body to contain the raw image bytes.
+        image_bytes = await request.body()
+        prediction = self.predict(image_bytes)
+        self.my_counter.inc()
+        return prediction
+
+teacher_app = TeacherClassifier.bind()
+student_app = StudentClassifier.bind()

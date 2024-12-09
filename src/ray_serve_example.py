@@ -3,8 +3,7 @@ from ray.serve import metrics
 from ray import serve
 from transformers import pipeline
 
-
-@serve.deployment(num_replicas=2, ray_actor_options={"num_cpus": 0.2, "num_gpus": 0, "memory": 2})
+@serve.deployment(num_replicas=2, ray_actor_options={"num_cpus": 0.2, "num_gpus": 0, "memory": 2}, name="student")
 class Translator:
     def __init__(self):
         # Load model
