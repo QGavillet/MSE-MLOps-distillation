@@ -1,6 +1,5 @@
 import ray
-from utils.ray_utils import get_scaling_config
-import ray.train as train
+from utils.ray_utils import get_scaling_config, get_run_config
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch
 import argparse
@@ -97,9 +96,6 @@ if __name__ == '__main__':
 
     set_seed(16)
 
-    # Configure scaling and resource requirements
-    scaling_config = get_scaling_config()
-
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_train_" + now
@@ -114,11 +110,9 @@ if __name__ == '__main__':
     # Launch distributed training
     trainer = ray.train.torch.TorchTrainer(
         train_func,
-        scaling_config=scaling_config,
+        scaling_config=get_scaling_config(),
         train_loop_config=config,
-        run_config=train.RunConfig(
-            failure_config=train.FailureConfig(1),
-        ),
+        run_config=get_run_config(),
     )
     result = trainer.fit()
 

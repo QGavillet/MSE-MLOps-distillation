@@ -13,5 +13,8 @@
         ]
       }
     ]
+  },
+  "env_vars": {
+    "WANDB_API_KEY": "d0e537cd5ce30632d57d1010332a2c397233b17b"
   }
 }
