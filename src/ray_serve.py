@@ -1,9 +1,6 @@
-# File name: ray_serve.py
 from starlette.requests import Request
-
-import ray
+from ray.serve import metrics
 from ray import serve
-
 from transformers import pipeline
 
 
@@ -12,6 +9,13 @@ class Translator:
     def __init__(self):
         # Load model
         self.model = pipeline("translation_en_to_fr", model="t5-small")
+        self.num_requests = 0
+        self.my_counter = metrics.Counter(
+            "my_counter",
+            description=("The number of odd-numbered requests to this deployment."),
+            tag_keys=("model",),
+        )
+        self.my_counter.set_default_tags({"model": "123"})
 
     def translate(self, text: str) -> str:
         # Run inference

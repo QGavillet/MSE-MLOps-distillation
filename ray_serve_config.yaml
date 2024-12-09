@@ -1,47 +1,28 @@
 # This file was generated using the `serve build` command on Ray v2.38.0.
-
 proxy_location: EveryNode
-
 http_options:
-
   host: 0.0.0.0
-
   port: 8000
-
 grpc_options:
-
   port: 9000
-
-  grpc_servicer_functions: []
-
+  grpc_servicer_functions: [ ]
 logging_config:
-
   encoding: TEXT
-
   log_level: INFO
-
   logs_dir: null
-
   enable_access_log: true
-
 applications:
-
-- name: translator
-
-  route_prefix: /
-
-  import_path: src.ray_serve:translator_app
-
-  runtime_env:
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/tags/test.zip"
-    pip:
-      - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
-      - transformers
-
-  deployments:
-
-  - name: Translator
-    num_replicas: 2
-    ray_actor_options:
-      num_cpus: 0.2
-      num_gpus: 0.0
+  - name: app1
+    route_prefix: /
+    import_path: src.ray_serve:translator_app
+    runtime_env:
+      # Example with a release
+      working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/tags/test.zip"
+      pip:
+        - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
+    deployments:
+      - name: Translator
+        num_replicas: 2
+        ray_actor_options:
+          num_cpus: 0.2
+          num_gpus: 0.0

@@ -1,0 +1,9 @@
+image:
+  tag: 2.38.0
+
+worker:
+  resources:
+    requests:
+      gpu: 1
+    limits:
+      gpu: 1
