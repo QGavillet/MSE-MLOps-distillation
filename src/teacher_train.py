@@ -1,8 +1,5 @@
 import ray
-from utils.ray_utils import get_ray_runtime_env
-
-ray.init(runtime_env=get_ray_runtime_env())
-
+from utils.ray_utils import get_scaling_config
 import ray.train as train
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch

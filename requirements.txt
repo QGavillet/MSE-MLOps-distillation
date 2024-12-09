@@ -1,5 +1,5 @@
 dvc[gs]==3.53.2
-ray[data,train,tune,serve]==2.38.0
+ray[train,serve]==2.38.0
 torch==2.5.1
 torchvision==0.20.1
 matplotlib==3.9.2

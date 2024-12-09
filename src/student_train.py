@@ -16,7 +16,8 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_train_data, StudentModel, get_scaling_config, set_seed
+from utils.utils import load_train_data, StudentModel, set_seed
+from utils.ray_utils import get_scaling_config
 import torch.nn.functional as F
 
 
@@ -130,8 +131,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     set_seed(16)
-
-    ray.init()
 
     # Configure scaling and resource requirements
     scaling_config = get_scaling_config()
