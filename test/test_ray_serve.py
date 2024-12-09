@@ -1,16 +1,12 @@
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#
-# TO MAKE THIS TEST WORK, YOU NEED TO
-#   - make sure the server is running
-#   - forward the port 8000 to have access locally
-#
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 import requests
 
-english_text = "Hello world! How are you doing today?"
+# Replace 'path/to/your/test_image.jpg' with the actual path to an image file on your system.
+with open("test/test_image.jpg", "rb") as f:
+    image_bytes = f.read()
 
-response = requests.post("http://localhost:8000/", json=english_text)
-french_text = response.text
+# The deployment is assumed to be running at http://localhost:8000/
+# Make sure the deployment is running before sending the request.
+response = requests.post("http://localhost:8000/", data=image_bytes, headers={"Content-Type": "application/octet-stream"})
 
-print(french_text)
+# Print out the prediction result from the server
+print(response.text)
