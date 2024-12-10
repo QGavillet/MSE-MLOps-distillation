@@ -110,3 +110,7 @@ def get_label_maps():
     }
     label2id = {label: id for id, label in id2label.items()}
     return id2label, label2id
+
+
+def setup():
+    set_seed(16)

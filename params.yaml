@@ -4,7 +4,7 @@ train-teacher:
   batch_size: 64
 
 train-student:
-  lr: 0.001
+  lr: 0.00005
   epochs: 1
   batch_size: 64
   temperature: 3

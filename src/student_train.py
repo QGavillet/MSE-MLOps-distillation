@@ -16,7 +16,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_train_data, StudentModel, set_seed
+from utils.utils import load_data, StudentModel, collate_fn, setup
 from utils.ray_utils import get_scaling_config, get_run_config
 import torch.nn.functional as F
 
@@ -40,10 +40,9 @@ def train_func(config):
     student = ray.train.torch.prepare_model(student)
 
     # Transform and DataLoader
-    train_data = load_train_data()
-    student_val_data = load_train_data()
-    student_train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False)
-    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False)
+    student_train_data, student_val_data = load_data()
+    student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
     student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
 
@@ -68,7 +67,10 @@ def train_func(config):
         student.train()
         running_loss = 0.0
         # Iterate over both student and teacher loaders simultaneously
-        for i, ((images, labels), teacher_preds_batch) in enumerate(zip(student_train_loader, teacher_train_loader)):
+        for i, (student_batch, teacher_preds_batch) in enumerate(zip(student_train_loader, teacher_train_loader)):
+            images = student_batch["pixel_values"]
+            labels = student_batch["labels"]
+
             images, labels = images.to(ray.train.torch.get_device()), labels.to(ray.train.torch.get_device())
 
             student_optimizer.zero_grad()
@@ -89,7 +91,10 @@ def train_func(config):
         criterion = nn.CrossEntropyLoss()
         running_val_loss = 0.0
         with torch.no_grad():
-            for images, labels in student_val_loader:
+            for batch in student_val_loader:
+                images = batch["pixel_values"]
+                labels = batch["labels"]
+
                 outputs = student(images)
                 loss = criterion(outputs, labels)
                 running_val_loss += loss.item()
@@ -130,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument("--output_folder", type=str, default="./models", help="Folder to save the trained model.")
     args = parser.parse_args()
 
-    set_seed(16)
+    setup()
 
     # Get absolute path of the teacher dataset
     teacher_data_path = os.path.abspath(args.dataset_path)

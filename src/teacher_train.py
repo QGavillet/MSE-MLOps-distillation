@@ -14,7 +14,7 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from utils.utils import load_data, set_seed, TeacherModel, collate_fn
+from utils.utils import load_data, TeacherModel, collate_fn, setup
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,7 +27,7 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data, val_data = load_data(subset_size=100)
+    train_data, val_data = load_data(subset_size=6000)
     train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
@@ -43,15 +43,6 @@ def train_func(config):
             images = batch["pixel_values"]
             labels = batch["labels"]
 
-            print(f"Type of images: {type(images)}")
-            print(f"Shape of images: {images.shape}")
-
-            images = batch["pixel_values"].to(device)
-            labels = batch["labels"].to(device)
-
-            images = images.to(torch.float32).to(device)
-            print(f"Dtype of images: {images.dtype}")
-
             outputs = model(images)
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
@@ -65,7 +56,10 @@ def train_func(config):
         model.eval()
         running_val_loss = 0.0
         with torch.no_grad():
-            for images, labels in val_loader:
+            for batch in val_loader:
+                images = batch["pixel_values"]
+                labels = batch["labels"]
+
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 running_val_loss += loss.item()
@@ -105,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument("--output_folder", type=str, default="./models", help="Folder to save the model")
     args = parser.parse_args()
 
-    set_seed(16)
+    setup()
 
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
@@ -115,7 +109,7 @@ if __name__ == '__main__':
         "epochs": train_params["epochs"],
         "lr": train_params["lr"],
         "batch_size": train_params["batch_size"],
-        "exp_name": exp_name,
+        "exp_name": exp_name
     }
 
     # Launch distributed training
