@@ -2,7 +2,8 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from torchvision import datasets, transforms
+from torchvision import transforms
+from datasets import load_dataset
 from transformers import MobileNetV2Config, MobileNetV2ForImageClassification, ViTForImageClassification, \
     ViTImageProcessor
 from torchvision.transforms import (
@@ -10,42 +11,56 @@ from torchvision.transforms import (
 )
 
 
-def get_train_transform():
+def apply_train_transform(data):
     processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
     image_mean, image_std = processor.image_mean, processor.image_std
     normalize = Normalize(mean=image_mean, std=image_std)
     size = processor.size["height"]
 
-    return transforms.Compose(
+    transform = transforms.Compose(
         [RandomResizedCrop(size), RandomHorizontalFlip(), ToTensor(), normalize]
     )
 
+    data['pixel_values'] = [transform(image.convert("RGB")) for image in data['img']]
+    return data
 
-def get_test_transform():
+
+def apply_test_transform(data):
     processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
     image_mean, image_std = processor.image_mean, processor.image_std
     normalize = Normalize(mean=image_mean, std=image_std)
     size = processor.size["height"]
 
-    return transforms.Compose(
+    transform = transforms.Compose(
         [Resize(size), CenterCrop(size), ToTensor(), normalize]
     )
 
-
-def load_train_data():
-    transform = get_train_transform()
-
-    train_data = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-
-    return train_data
+    data['pixel_values'] = [transform(image.convert("RGB")) for image in data['img']]
+    return data
 
 
-def load_test_data():
-    transform = get_test_transform()
+def load_data(subset_size=None):
+    if subset_size is None:
+        data = load_dataset('cifar10')
+        train_ds = data['train']
+        test_ds = data['test']
+    else:
+        train_size = int(subset_size * 0.8)
+        test_size = subset_size - train_size
+        train_split = 'train[:{}]'.format(train_size)
+        test_split = 'test[:{}]'.format(test_size)
+        train_ds, test_ds = load_dataset('cifar10', split=[train_split, test_split])
 
-    test_data = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    train_ds.set_transform(apply_train_transform)
+    test_ds.set_transform(apply_test_transform)
 
-    return test_data
+    return train_ds, test_ds
+
+
+def collate_fn(data):
+    pixel_values = torch.stack([sample["pixel_values"] for sample in data])
+    labels = torch.tensor([sample["label"] for sample in data])
+    return {"pixel_values": pixel_values, "labels": labels}
 
 
 def set_seed(seed):

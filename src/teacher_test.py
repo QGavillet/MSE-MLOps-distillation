@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import pytz
 from matplotlib import pyplot as plt
-from utils.utils import load_test_data, load_train_data
+from utils.utils import load_data
 from utils.utils import TeacherModel
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ import wandb
 
 # Evaluate the model
 def evaluate_model(model):
-    test_data = load_test_data()
+    _, test_data = load_data()
 
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
 
@@ -69,7 +69,7 @@ def evaluate_model(model):
 
 
 def create_dataset(model, data_path):
-    train_data = load_train_data()
+    train_data, _ = load_data()
 
     train_loader = DataLoader(train_data, batch_size=64, shuffle=False)
 

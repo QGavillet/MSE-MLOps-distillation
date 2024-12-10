@@ -9,12 +9,10 @@
           "wandb==0.18.7",
           "transformers==4.47.0",
           "ray[train]==2.38.0",
-          "matplotlib==3.9.2"
+          "matplotlib==3.9.2",
+          "datasets==3.1.0"
         ]
       }
     ]
-  },
-  "env_vars": {
-    "WANDB_API_KEY": ""
   }
 }

@@ -14,10 +14,11 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from utils.utils import load_train_data, set_seed, TeacherModel
+from utils.utils import load_data, set_seed, TeacherModel, collate_fn
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def train_func(config):
     model = TeacherModel()
@@ -26,10 +27,9 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data = load_train_data()
-    val_data = load_train_data()
-    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False)
-    val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False)
+    train_data, val_data = load_data(subset_size=100)
+    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
     val_loader = ray.train.torch.prepare_data_loader(val_loader)
 
@@ -39,7 +39,19 @@ def train_func(config):
     for epoch in range(config["epochs"]):
         model.train()
         running_loss = 0.0
-        for images, labels in train_loader:
+        for batch in train_loader:
+            images = batch["pixel_values"]
+            labels = batch["labels"]
+
+            print(f"Type of images: {type(images)}")
+            print(f"Shape of images: {images.shape}")
+
+            images = batch["pixel_values"].to(device)
+            labels = batch["labels"].to(device)
+
+            images = images.to(torch.float32).to(device)
+            print(f"Dtype of images: {images.dtype}")
+
             outputs = model(images)
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
