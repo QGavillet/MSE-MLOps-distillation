@@ -1,5 +1,4 @@
 .idea
-runtime-env.yaml
 
 wandb
 metrics/*

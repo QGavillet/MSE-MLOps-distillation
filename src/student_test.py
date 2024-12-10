@@ -1,11 +1,13 @@
 import argparse
 import json
+import os
 from datetime import datetime
 import pytz
 from matplotlib import pyplot as plt
 import numpy as np
-from utils.utils import StudentModel, collate_fn, setup
+from utils.utils import StudentModel, collate_fn
 from utils.utils import load_data
+from utils.config import setup, get_wandb_api_key
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -58,6 +60,8 @@ def evaluate_model(model):
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "student_test_" + now
+    exp_name = "teacher_test_" + now
+    os.environ["WANDB_API_KEY"] = get_wandb_api_key()
     wandb.init(project="MSE-MLOps-distillation", name=exp_name)
     metrics = {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
     wandb.log(metrics)

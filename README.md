@@ -1,23 +1,6 @@
 # MLOps distillation project
 
 ## Setup
-Create a runtime-env.yaml file in the root directory of the project and add the following environment variables:
-```
-conda:
-  dependencies:
-    - pip
-    - pip:
-        - torch==2.5.1
-        - torchvision==0.20.1
-        - wandb==0.18.7
-        - transformers==4.47.0
-        - "ray[train]==2.38.0"
-        - matplotlib==3.9.2
-        - datasets==3.1.0
-        - python-dotenv
-env:
-  WAND_API_KEY: your_wandb_api_key
-```
 
 Create a virtual environment and install the dependencies:
 ```bash

@@ -4,8 +4,9 @@ import os
 from datetime import datetime
 import pytz
 from matplotlib import pyplot as plt
-from utils.utils import load_data, collate_fn, setup
+from utils.utils import load_data, collate_fn
 from utils.utils import TeacherModel
+from utils.config import setup, get_wandb_api_key
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -17,7 +18,7 @@ import wandb
 
 # Evaluate the model
 def evaluate_model(model):
-    _, test_data = load_data()
+    _, test_data = load_data(subset_size=100)
 
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
@@ -59,6 +60,7 @@ def evaluate_model(model):
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_test_" + now
+    os.environ["WANDB_API_KEY"] = get_wandb_api_key()
     wandb.init(project="MSE-MLOps-distillation", name=exp_name)
     metrics = {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
     wandb.log(metrics)
@@ -72,7 +74,7 @@ def evaluate_model(model):
 
 
 def create_dataset(model, data_path):
-    train_data, _ = load_data()
+    train_data, _ = load_data(subset_size=100)
 
     train_loader = DataLoader(train_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 

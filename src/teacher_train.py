@@ -1,5 +1,5 @@
 import ray
-from utils.ray_utils import get_scaling_config, get_run_config
+from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch
 import argparse
@@ -14,7 +14,7 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from utils.utils import load_data, TeacherModel, collate_fn, setup
+from utils.utils import load_data, TeacherModel, collate_fn
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,14 +27,14 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data, val_data = load_data(subset_size=6000)
+    train_data, val_data = load_data(subset_size=100)
     train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
     val_loader = ray.train.torch.prepare_data_loader(val_loader)
 
     wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False,
-                     config=config)
+                     config=config, api_key=get_wandb_api_key())
 
     for epoch in range(config["epochs"]):
         model.train()

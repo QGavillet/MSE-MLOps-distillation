@@ -16,13 +16,13 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_data, StudentModel, collate_fn, setup
-from utils.ray_utils import get_scaling_config, get_run_config
+from utils.utils import load_data, StudentModel, collate_fn
+from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key
 import torch.nn.functional as F
-
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 # Distillation loss function
 def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha=0.5):
@@ -41,8 +41,10 @@ def train_func(config):
 
     # Transform and DataLoader
     student_train_data, student_val_data = load_data()
-    student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
-    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False,
+                                      collate_fn=collate_fn)
+    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False,
+                                    collate_fn=collate_fn)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
     student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
 
@@ -61,7 +63,8 @@ def train_func(config):
     alpha = config["alpha"]
 
     # wb log
-    wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False, config=config)
+    wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False,
+                     config=config, api_key=get_wandb_api_key())
 
     for epoch in range(epochs):
         student.train()

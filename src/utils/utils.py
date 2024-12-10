@@ -50,6 +50,7 @@ def load_data(subset_size=None):
         train_split = 'train[:{}]'.format(train_size)
         test_split = 'test[:{}]'.format(test_size)
         train_ds, test_ds = load_dataset('cifar10', split=[train_split, test_split])
+        print(train_ds.shape)
 
     train_ds.set_transform(apply_train_transform)
     test_ds.set_transform(apply_test_transform)
@@ -110,7 +111,3 @@ def get_label_maps():
     }
     label2id = {label: id for id, label in id2label.items()}
     return id2label, label2id
-
-
-def setup():
-    set_seed(16)

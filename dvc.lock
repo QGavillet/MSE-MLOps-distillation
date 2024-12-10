@@ -6,12 +6,12 @@ stages:
     deps:
     - path: src/teacher_train.py
       hash: md5
-      md5: 509c229650daf5464f11e06a3db1f131
-      size: 4809
+      md5: 3790cd94be7d629a4b31122ab36c2c43
+      size: 4800
     - path: src/utils/utils.py
       hash: md5
-      md5: e8ef01be781591170776543d2b39db0e
-      size: 3550
+      md5: 0696906bc032f9213b5cb17f4dfec681
+      size: 3689
     params:
       params.yaml:
         train-teacher:
@@ -21,11 +21,11 @@ stages:
     outs:
     - path: metrics/teacher/training_plot.png
       hash: md5
-      md5: f4a4f1f5916908cdb8b57e76d8b0e1d8
-      size: 18803
+      md5: a884f304ae4c8881948932f556fc6610
+      size: 20998
     - path: models/teacher.pt
       hash: md5
-      md5: 5cae39abc1940eb44eb859541a3151e4
+      md5: 0a251a37185dd7860cb9b42f62d35fae
       size: 343295946
   teacher_test:
     cmd: python src/teacher_test.py

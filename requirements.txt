@@ -9,4 +9,3 @@ wandb==0.18.7
 seaborn==0.13.2
 transformers==4.47.0
 datasets==3.1.0
-python-dotenv
