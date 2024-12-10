@@ -27,7 +27,7 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data, val_data = load_data(subset_size=100)
+    train_data, val_data = load_data(subset_size=6000)
     train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)

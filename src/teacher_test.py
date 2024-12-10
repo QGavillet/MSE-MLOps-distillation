@@ -18,7 +18,7 @@ import wandb
 
 # Evaluate the model
 def evaluate_model(model):
-    _, test_data = load_data(subset_size=100)
+    _, test_data = load_data()
 
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
