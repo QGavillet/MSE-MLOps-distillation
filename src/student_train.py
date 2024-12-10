@@ -16,7 +16,8 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_train_data, StudentModel, get_scaling_config, set_seed
+from utils.utils import load_train_data, StudentModel, set_seed
+from utils.ray_utils import get_scaling_config, get_run_config
 import torch.nn.functional as F
 
 
@@ -131,11 +132,6 @@ if __name__ == '__main__':
 
     set_seed(16)
 
-    ray.init()
-
-    # Configure scaling and resource requirements
-    scaling_config = get_scaling_config()
-
     # Get absolute path of the teacher dataset
     teacher_data_path = os.path.abspath(args.dataset_path)
     teacher_data = np.load(teacher_data_path)
@@ -149,7 +145,7 @@ if __name__ == '__main__':
     # Launch distributed training with Ray
     trainer = ray.train.torch.TorchTrainer(
         train_func,
-        scaling_config=scaling_config,
+        scaling_config=get_scaling_config(),
         train_loop_config={
             "epochs": train_params["epochs"],
             "lr": train_params["lr"],
@@ -161,9 +157,7 @@ if __name__ == '__main__':
         datasets={
             "teacher_dataset": teacher_dataset
         },
-        run_config=train.RunConfig(
-            failure_config=train.FailureConfig(1),
-        ),
+        run_config=get_run_config(),
     )
 
     result = trainer.fit()
