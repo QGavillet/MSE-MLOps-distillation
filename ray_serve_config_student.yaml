@@ -34,7 +34,7 @@ applications:
 
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/heads/ray_serve.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/tags/testDeployment.zip"
     pip:
       # Ref to github raw file
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/ray_serve/requirements.txt"

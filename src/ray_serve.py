@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torchvision import models, transforms
 from PIL import Image
 import io
+from utils.utils import TeacherModel
 
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
@@ -75,9 +76,9 @@ class StudentClassifier:
 class TeacherClassifier:
     def __init__(self):
         # Load the image processor and model from the teacher directory
-        #self.processor = AutoImageProcessor.from_pretrained("../teacher")
-        #self.model = AutoModelForImageClassification.from_pretrained("../teacher")
-        self.model = models.mobilenet_v2(weights="IMAGENET1K_V1")
+        self.processor = AutoImageProcessor.from_pretrained("../teacher")
+        self.model = AutoModelForImageClassification.from_pretrained("../teacher")
+        self.model = TeacherModel()
         self.model.eval()
 
         # If the model config has id2label, use it. Otherwise, define your own labels.
