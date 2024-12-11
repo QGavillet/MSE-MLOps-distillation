@@ -26,11 +26,11 @@ logging_config:
 
 applications:
 
-- name: student
+- name: teacher
 
-  route_prefix: /
+  route_prefix: /teacher
 
-  import_path: src.ray_serve:student_app
+  import_path: src.ray_serve:teacher_app
 
   runtime_env:
     # Example with a release
@@ -40,7 +40,27 @@ applications:
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/ray_serve/requirements.txt"
 
   deployments:
+    - name: teacher
+      num_replicas: 1
+      ray_actor_options:
+        num_cpus: 0.8
+        num_gpus: 0.0
+        memory: 6442450944.0
 
+
+- name: student
+
+  route_prefix: /student
+
+  import_path: src.ray_serve:student_app
+
+  runtime_env:
+    # Example with a release
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/heads/ray_serve.zip"
+    pip:
+      # Ref to github raw file
+      - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/ray_serve/requirements.txt"
+  deployments:
   - name: student
     num_replicas: 1
     ray_actor_options:

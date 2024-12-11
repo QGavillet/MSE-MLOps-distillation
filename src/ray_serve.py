@@ -10,7 +10,7 @@ import io
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 
-@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024 }, name="student")
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024 }, name="student", route_prefix="/student")
 class StudentClassifier:
     def __init__(self):
         # Pre-trained MobileNetV2 on ImageNet
@@ -71,12 +71,13 @@ class StudentClassifier:
         self.my_counter.inc()
         return prediction
 
-@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="teacher")
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="teacher", route_prefix="/teacher")
 class TeacherClassifier:
     def __init__(self):
         # Load the image processor and model from the teacher directory
-        self.processor = AutoImageProcessor.from_pretrained("../teacher")
-        self.model = AutoModelForImageClassification.from_pretrained("../teacher")
+        #self.processor = AutoImageProcessor.from_pretrained("../teacher")
+        #self.model = AutoModelForImageClassification.from_pretrained("../teacher")
+        self.model = models.mobilenet_v2(weights="IMAGENET1K_V1")
         self.model.eval()
 
         # If the model config has id2label, use it. Otherwise, define your own labels.
