@@ -28,6 +28,7 @@ worker:
       cpu: "2"
       memory: "12Gi"
 
+
 headService:
   metadata:
     annotations:

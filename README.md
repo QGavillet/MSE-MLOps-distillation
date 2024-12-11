@@ -12,7 +12,7 @@ It then generates a ray_serve_config.yaml file and we need to add the working di
 ```yaml
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/tags/test.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/heads/ray_serve.zip"
     pip:
       # Ref to github raw file
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
