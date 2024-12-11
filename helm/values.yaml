@@ -27,3 +27,11 @@ worker:
     requests:
       cpu: "2"
       memory: "12Gi"
+
+
+headService:
+  metadata:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+
