@@ -1,6 +1,6 @@
 stages:
   teacher_train:
-    cmd: ray job submit --address http://localhost:8265 --runtime-env=runtime-env.yaml --working-dir . -- python src/teacher_train.py
+    cmd: python src/teacher_train.py
     deps:
     - src/utils/utils.py
     - src/teacher_train.py
@@ -24,7 +24,7 @@ stages:
     - metrics/teacher/confusion_matrix.png
 
   student_train:
-    cmd: ray job submit --address http://localhost:8265 --runtime-env=runtime-env.yaml --working-dir . -- python src/student_train.py
+    cmd: python src/student_train.py
     deps:
       - src/utils/utils.py
       - src/student_train.py

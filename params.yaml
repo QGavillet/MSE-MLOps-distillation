@@ -9,3 +9,6 @@ train-student:
   batch_size: 64
   temperature: 3
   alpha: 0.8
+
+core:
+  subset_size: 100 # None if you want to use the entire dataset

@@ -1,5 +1,6 @@
 import ray
-from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key
+
+from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key, get_ray_runtime_env
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch
 import argparse
@@ -27,7 +28,10 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data, val_data = load_data(subset_size=6000)
+    subset_size = config["subset_size"]
+    if subset_size is None:
+        subset_size = 6000
+    train_data, val_data = load_data(subset_size=subset_size)
     train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
@@ -101,15 +105,23 @@ if __name__ == '__main__':
 
     setup()
 
+    # Initialize Remote Ray -> does not work, get "Waiting for scheduling" and nothing happens
+    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+
+    # Initialize Local Ray
+    ray.init()
+
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_train_" + now
-    train_params = yaml.safe_load(open("params.yaml"))["train-teacher"]
+    params = yaml.safe_load(open("params.yaml"))
+    train_params = params["train-teacher"]
     config = {
         "epochs": train_params["epochs"],
         "lr": train_params["lr"],
         "batch_size": train_params["batch_size"],
-        "exp_name": exp_name
+        "exp_name": exp_name,
+        "subset_size": params["core"]["subset_size"],
     }
 
     # Launch distributed training

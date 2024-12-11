@@ -77,10 +77,12 @@ class TeacherModel(nn.Module):
     def __init__(self, model_name='google/vit-base-patch16-224-in21k'):
         super(TeacherModel, self).__init__()
         id2label, label2id = get_label_maps()
+
         self.model = ViTForImageClassification.from_pretrained(model_name, id2label=id2label, label2id=label2id)
 
     def forward(self, x):
         return self.model(x).logits
+
 
 
 # Define the student model

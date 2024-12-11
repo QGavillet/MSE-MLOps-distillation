@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 import pytz
+import yaml
 from matplotlib import pyplot as plt
 from utils.utils import load_data, collate_fn
 from utils.utils import TeacherModel
@@ -17,8 +18,8 @@ import wandb
 
 
 # Evaluate the model
-def evaluate_model(model):
-    _, test_data = load_data()
+def evaluate_model(model, subset_size):
+    _, test_data = load_data(subset_size=subset_size)
 
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
@@ -73,8 +74,8 @@ def evaluate_model(model):
         json.dump(metrics, f)
 
 
-def create_dataset(model, data_path):
-    train_data, _ = load_data(subset_size=100)
+def create_dataset(model, data_path, subset_size):
+    train_data, _ = load_data(subset_size=subset_size)
 
     train_loader = DataLoader(train_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
@@ -104,13 +105,18 @@ if __name__ == '__main__':
 
     # Load the trained model
     trained_model = TeacherModel()
+    checkpoint = torch.load(args.model_path, weights_only=True)
+    checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
+    trained_model.load_state_dict(checkpoint)
     trained_model = torch.nn.DataParallel(trained_model)
-    trained_model.load_state_dict(torch.load(args.model_path, weights_only=True))
+
+    # Subset size
+    subset_size = yaml.safe_load(open("params.yaml"))["core"]["subset_size"]
 
     # Evaluate the model
-    evaluate_model(trained_model)
+    evaluate_model(trained_model, subset_size)
 
     # Create dataset for the student model
     data_save_path = args.output_folder
     os.makedirs(data_save_path, exist_ok=True)
-    create_dataset(trained_model, data_save_path)
+    create_dataset(trained_model, data_save_path, subset_size)

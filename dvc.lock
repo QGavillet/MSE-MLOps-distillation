@@ -1,17 +1,16 @@
 schema: '2.0'
 stages:
   teacher_train:
-    cmd: ray job submit --address http://localhost:8265 --runtime-env=runtime-env.yaml
-      --working-dir . -- export $(cat .env) && python src/teacher_train.py
+    cmd: python src/teacher_train.py
     deps:
     - path: src/teacher_train.py
       hash: md5
-      md5: 3790cd94be7d629a4b31122ab36c2c43
-      size: 4800
+      md5: c06a6e0807d3401befc86db5d33b7ac7
+      size: 5266
     - path: src/utils/utils.py
       hash: md5
-      md5: 0696906bc032f9213b5cb17f4dfec681
-      size: 3689
+      md5: 2683e1fe8caf67063752059b9a8e9546
+      size: 3582
     params:
       params.yaml:
         train-teacher:
@@ -21,78 +20,77 @@ stages:
     outs:
     - path: metrics/teacher/training_plot.png
       hash: md5
-      md5: a884f304ae4c8881948932f556fc6610
-      size: 20998
+      md5: a993126894a367fbe93d776a01c74843
+      size: 20044
     - path: models/teacher.pt
       hash: md5
-      md5: 0a251a37185dd7860cb9b42f62d35fae
-      size: 343295946
+      md5: f0d59befd4d005176c3ce122def0038b
+      size: 343292938
   teacher_test:
     cmd: python src/teacher_test.py
     deps:
     - path: models/teacher.pt
       hash: md5
-      md5: 5cae39abc1940eb44eb859541a3151e4
-      size: 343295946
+      md5: f0d59befd4d005176c3ce122def0038b
+      size: 343292938
     - path: src/teacher_test.py
       hash: md5
-      md5: 669738c37cbd8359889a1950656adcb6
-      size: 4059
+      md5: f76a7b77b81b0ba35f6e11c7be6e1ceb
+      size: 4458
     outs:
     - path: data/teacher.npy
       hash: md5
-      md5: 8fcb0a234b2cff0bf968faf3209c192c
+      md5: 748483123a1bc6ed7ad8d0e6a1224647
       size: 3328
     - path: metrics/teacher/confusion_matrix.png
       hash: md5
-      md5: 3c0f295767e668faf647b46be29796c5
-      size: 33352
+      md5: c80637914f4ebc17381998876329cd48
+      size: 36424
     - path: metrics/teacher/metrics.json
       hash: md5
-      md5: 2c81915c2ef15e698a07db9d98a8b7e6
-      size: 113
+      md5: f6261bd650b0906fc9039d6a16c8bce4
+      size: 65
   student_train:
-    cmd: ray job submit --address http://localhost:8265 --runtime-env=runtime-env.yaml
-      --working-dir . -- export $(cat .env) && python src/student_train.py
+    cmd: python src/student_train.py
     deps:
     - path: data/teacher.npy
       hash: md5
-      md5: 8fcb0a234b2cff0bf968faf3209c192c
+      md5: 748483123a1bc6ed7ad8d0e6a1224647
       size: 3328
     - path: src/student_train.py
       hash: md5
-      md5: 55136cf9d1d977ff9368d3ea750936b2
-      size: 7014
+      md5: d4f270352ad7e1c0c3e782aa2a6899d1
+      size: 7257
     - path: src/utils/utils.py
       hash: md5
-      md5: e8ef01be781591170776543d2b39db0e
-      size: 3550
+      md5: 2683e1fe8caf67063752059b9a8e9546
+      size: 3582
     outs:
     - path: metrics/student/training_plot.png
       hash: md5
-      md5: df0dae1c7a9519aaf52b78036ac2816c
-      size: 18714
+      md5: 1bc0abf20b201e7da7b9a33515bdd62b
+      size: 16972
     - path: models/student.pt
       hash: md5
-      md5: 8c2a0caaf2ca68bc626efae65e8668eb
-      size: 9188994
+      md5: 647ecd534de3456b92e4cc4718f6414b
+      size: 9185282
   student_test:
     cmd: python src/student_test.py
     deps:
     - path: models/student.pt
       hash: md5
-      md5: 8c2a0caaf2ca68bc626efae65e8668eb
-      size: 9188994
+      md5: 647ecd534de3456b92e4cc4718f6414b
+      size: 9185282
     - path: src/student_test.py
       hash: md5
-      md5: ce943f3430c9464d84182eec52c6961a
-      size: 3167
+      md5: 1c457b4ac6aaf41aafe8b49136cc87d8
+      size: 3579
     outs:
     - path: metrics/student/confusion_matrix.png
       hash: md5
-      md5: 75693353d22e6558fd14491639268145
-      size: 34856
+      md5: d872fe9003eed6a557aa6386492f13cb
+      size: 33318
     - path: metrics/student/metrics.json
       hash: md5
-      md5: af01e7c365a8f4c979390ce38c302455
-      size: 61
+      md5: 93c000b879cd5453c4000a8b97589bad
+      size: 97

@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 import pytz
+import yaml
 from matplotlib import pyplot as plt
 import numpy as np
 from utils.utils import StudentModel, collate_fn
@@ -17,8 +18,8 @@ import wandb
 
 
 # Evaluate the model
-def evaluate_model(model):
-    _, test_data = load_data()
+def evaluate_model(model, subset_size):
+    _, test_data = load_data(subset_size=subset_size)
 
     test_loader = DataLoader(test_data, batch_size=64, shuffle=False, collate_fn=collate_fn)
 
@@ -84,8 +85,13 @@ if __name__ == '__main__':
 
     # Load the trained model
     trained_model = StudentModel()
+    checkpoint = torch.load(args.model_path, weights_only=True)
+    checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
+    trained_model.load_state_dict(checkpoint)
     trained_model = torch.nn.DataParallel(trained_model)
-    trained_model.load_state_dict(torch.load(args.model_path, weights_only=True))
+
+    # Subset size
+    subset_size = yaml.safe_load(open("params.yaml"))["core"]["subset_size"]
 
     # Evaluate the model
-    evaluate_model(trained_model)
+    evaluate_model(trained_model, subset_size)

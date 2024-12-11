@@ -40,7 +40,7 @@ def train_func(config):
     student = ray.train.torch.prepare_model(student)
 
     # Transform and DataLoader
-    student_train_data, student_val_data = load_data()
+    student_train_data, student_val_data = load_data(subset_size=config["subset_size"])
     student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False,
                                       collate_fn=collate_fn)
     student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False,
@@ -140,6 +140,8 @@ if __name__ == '__main__':
 
     setup()
 
+    ray.init()
+
     # Get absolute path of the teacher dataset
     teacher_data_path = os.path.abspath(args.dataset_path)
     teacher_data = np.load(teacher_data_path)
@@ -148,7 +150,8 @@ if __name__ == '__main__':
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "student_train_" + now
-    train_params = yaml.safe_load(open("params.yaml"))["train-student"]
+    params = yaml.safe_load(open("params.yaml"))
+    train_params = params["train-student"]
 
     # Launch distributed training with Ray
     trainer = ray.train.torch.TorchTrainer(
@@ -161,6 +164,7 @@ if __name__ == '__main__':
             "temperature": train_params["temperature"],
             "alpha": train_params["alpha"],
             "exp_name": exp_name,
+            "subset_size": params["core"]["subset_size"]
         },
         datasets={
             "teacher_dataset": teacher_dataset

@@ -10,6 +10,8 @@ pip install -r requirements.txt
 ```
 
 # Run an experiment
+For this you need to have access to the configured Google Cloud Storage bucket.
+
 1. Forward the ray server port to the local machine. For this you need to have the kubernetes config with access to the cluster.
 ```bash
 kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
@@ -20,7 +22,7 @@ kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forwar
 dvc repro
 ```
 
-3. Push to the gc storage. For this you need to have the gcloud credentials set up.
+3. Push to the gc storage.
 ```bash
 dvc push
 ```
