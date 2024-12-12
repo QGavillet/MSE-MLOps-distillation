@@ -16,6 +16,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from utils.utils import load_data, TeacherModel, collate_fn
 
+
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -106,10 +107,11 @@ if __name__ == '__main__':
 
     setup()
 
-    ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+    # Initialize Remote Ray -> does not work, get "Waiting for scheduling" and nothing happens
+    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
 
     # Initialize Local Ray
-    #ray.init()
+    ray.init()
 
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")

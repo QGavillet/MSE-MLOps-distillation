@@ -15,7 +15,6 @@ def get_run_config():
 
 def get_ray_runtime_env():
     return RuntimeEnv(
-        working_dir='gs://mlops-distillation/MSE-MLOps-distillation.zip',
         pip={
             "packages": [
                 "torch==2.5.1",
@@ -24,11 +23,10 @@ def get_ray_runtime_env():
                 "transformers==4.47.0",
                 "ray[train]==2.38.0",
                 "matplotlib==3.9.2",
-                "datasets==3.1.0",
-                "smart_open",
-                "google-cloud-storage"
+                "datasets==3.1.0"
             ],
-        }
+        },
+        py_modules=["utils.utils", "utils.config"],
     )
 
 

@@ -7,7 +7,7 @@ import yaml
 from matplotlib import pyplot as plt
 from utils.utils import load_data, collate_fn
 from utils.utils import TeacherModel
-from utils.config import setup, get_wandb_api_key
+from utils.config import setup
 import numpy as np
 import torch
 from torch.utils.data import DataLoader

@@ -5,8 +5,8 @@ stages:
     deps:
     - path: src/teacher_train.py
       hash: md5
-      md5: 1aa2cabee55b92e134810b6ac12c81d6
-      size: 6428
+      md5: e531c88f9282ba8b03e7fd1f48407f3c
+      size: 5393
     - path: src/utils/utils.py
       hash: md5
       md5: 2683e1fe8caf67063752059b9a8e9546
@@ -20,47 +20,47 @@ stages:
     outs:
     - path: metrics/teacher/training_plot.png
       hash: md5
-      md5: d626e5316aa1a1680c9fe8a935588825
-      size: 18468
+      md5: 00cb888b705146222777acccd72dc600
+      size: 21400
     - path: models/teacher.pt
       hash: md5
-      md5: e8627316682bd55d26764ca423f3366f
+      md5: e5ae64a6ef437a74f90dc601e11d26a8
       size: 343292938
   teacher_test:
     cmd: python src/teacher_test.py
     deps:
     - path: models/teacher.pt
       hash: md5
-      md5: e8627316682bd55d26764ca423f3366f
+      md5: e5ae64a6ef437a74f90dc601e11d26a8
       size: 343292938
     - path: src/teacher_test.py
       hash: md5
-      md5: c4e5b94578f79ecfb7bc21641a6777b7
-      size: 4404
+      md5: a15a20622793f26aba179062a77d1079
+      size: 4385
     outs:
     - path: data/teacher.npy
       hash: md5
-      md5: f61816a41a4457bb2d97f544a4ae1f43
+      md5: b9481ed6482ccd76ca294f82715f1780
       size: 3328
     - path: metrics/teacher/confusion_matrix.png
       hash: md5
-      md5: 831febc61db7f30c7123e90825682038
-      size: 33344
+      md5: 5abdc86bad4fe4d1beb85d8c165e8a17
+      size: 34030
     - path: metrics/teacher/metrics.json
       hash: md5
-      md5: 03018f2ee56dd6f045f79e37c605e62f
-      size: 108
+      md5: 773bd01fa659f5b083dd2b1436fb3afb
+      size: 80
   student_train:
     cmd: python src/student_train.py
     deps:
     - path: data/teacher.npy
       hash: md5
-      md5: f61816a41a4457bb2d97f544a4ae1f43
+      md5: b9481ed6482ccd76ca294f82715f1780
       size: 3328
     - path: src/student_train.py
       hash: md5
-      md5: 052d77fe825ff18d56f927327e71860d
-      size: 7427
+      md5: 3e6b30c4e608938eff9708fef0fe6361
+      size: 7472
     - path: src/utils/utils.py
       hash: md5
       md5: 2683e1fe8caf67063752059b9a8e9546
@@ -68,29 +68,29 @@ stages:
     outs:
     - path: metrics/student/training_plot.png
       hash: md5
-      md5: fbfd7badc0178612ee6f2d4879a1a11c
-      size: 19553
+      md5: beff8272bf441a120448aa807f6b0c03
+      size: 22068
     - path: models/student.pt
       hash: md5
-      md5: 5eab430df34800bea7feab22d93021c8
+      md5: b790bdb1c77400b310f43f8283aa7b3a
       size: 9185282
   student_test:
     cmd: python src/student_test.py
     deps:
     - path: models/student.pt
       hash: md5
-      md5: 5eab430df34800bea7feab22d93021c8
+      md5: b790bdb1c77400b310f43f8283aa7b3a
       size: 9185282
     - path: src/student_test.py
       hash: md5
-      md5: 8ba3a4a9524e2bbeba052848b76336e3
-      size: 3488
+      md5: 78b068aa173e2cf2d66ab6e9bcdb0d6c
+      size: 3459
     outs:
     - path: metrics/student/confusion_matrix.png
       hash: md5
-      md5: 89440738b244a28f82077cabe2f9d314
-      size: 33870
+      md5: 99900c0bca9d7cb5c1a5d899b1dd6c1d
+      size: 33291
     - path: metrics/student/metrics.json
       hash: md5
-      md5: e468e2682aeec2519204000176ad5db4
-      size: 83
+      md5: 5be8c6306c6f93ba5769c7507c4f6ea3
+      size: 99

@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
 from utils.utils import load_data, StudentModel, collate_fn
-from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key, get_ray_runtime_env
+from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 import torch.nn.functional as F
 
 # Define device
@@ -142,8 +142,8 @@ if __name__ == '__main__':
 
     setup()
 
-    ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
-    #ray.init()
+    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+    ray.init()
 
     # Get absolute path of the teacher dataset
     teacher_data_path = os.path.abspath(args.dataset_path)
