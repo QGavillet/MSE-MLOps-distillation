@@ -1,10 +1,12 @@
+import ray
+from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
+from ray.air.integrations.wandb import setup_wandb
+import ray.train.torch
 import argparse
 import shutil
 from datetime import datetime
 import yaml
 import pytz
-import ray.train as train
-import ray.train.torch
 import os
 import tempfile
 import torch
@@ -12,15 +14,12 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-import ray
-import ray.train.torch
-from ray.air.integrations.wandb import setup_wandb
-from utils.utils import load_train_data, get_scaling_config, set_seed
-from utils.utils import TeacherModel
+from utils.utils import load_data, TeacherModel, collate_fn
 
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def train_func(config):
     model = TeacherModel()
@@ -29,20 +28,27 @@ def train_func(config):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=config["lr"])
 
-    train_data = load_train_data()
-    val_data = load_train_data()
-    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False)
-    val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False)
+    subset_size = config["subset_size"]
+    if subset_size is None:
+        subset_size = 6000
+    train_data, val_data = load_data(subset_size=subset_size)
+    train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
     val_loader = ray.train.torch.prepare_data_loader(val_loader)
 
+    wand_api_key = config["wandb_api_key"]
+    config.pop("wandb_api_key")
     wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False,
-                     config=config)
+                     config=config, api_key=wand_api_key)
 
     for epoch in range(config["epochs"]):
         model.train()
         running_loss = 0.0
-        for images, labels in train_loader:
+        for batch in train_loader:
+            images = batch["pixel_values"]
+            labels = batch["labels"]
+
             outputs = model(images)
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
@@ -56,7 +62,10 @@ def train_func(config):
         model.eval()
         running_val_loss = 0.0
         with torch.no_grad():
-            for images, labels in val_loader:
+            for batch in val_loader:
+                images = batch["pixel_values"]
+                labels = batch["labels"]
+
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 running_val_loss += loss.item()
@@ -96,34 +105,39 @@ if __name__ == '__main__':
     parser.add_argument("--output_folder", type=str, default="./models", help="Folder to save the model")
     args = parser.parse_args()
 
-    set_seed(16)
+    setup()
 
+    # Initialize Remote Ray -> does not work, get "Waiting for scheduling" and nothing happens
+    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+
+    # Initialize Local Ray
     ray.init()
-
-    # Configure scaling and resource requirements
-    scaling_config = get_scaling_config()
 
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_train_" + now
-    train_params = yaml.safe_load(open("params.yaml"))["train-teacher"]
+    params = yaml.safe_load(open("params.yaml"))
+    train_params = params["train-teacher"]
+
     config = {
         "epochs": train_params["epochs"],
         "lr": train_params["lr"],
         "batch_size": train_params["batch_size"],
         "exp_name": exp_name,
+        "subset_size": params["core"]["subset_size"],
+        "wandb_api_key": os.environ.get("WANDB_API_KEY"),
     }
 
     # Launch distributed training
     trainer = ray.train.torch.TorchTrainer(
         train_func,
-        scaling_config=scaling_config,
+        scaling_config=get_scaling_config(),
         train_loop_config=config,
-        run_config=train.RunConfig(
-            failure_config=train.FailureConfig(1),
-        ),
+        run_config=get_run_config(),
     )
     result = trainer.fit()
+
+    print(result)
 
     # Ensure the model folder exists
     model_save_path = args.output_folder
