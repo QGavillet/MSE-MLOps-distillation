@@ -1,4 +1,5 @@
 .idea
+gcs_credentials.json
 
 wandb
 metrics/*

@@ -1,6 +1,5 @@
 import ray
-
-from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key, get_ray_runtime_env
+from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch
 import argparse
@@ -37,8 +36,10 @@ def train_func(config):
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
     val_loader = ray.train.torch.prepare_data_loader(val_loader)
 
+    wand_api_key = config["wandb_api_key"]
+    config.pop("wandb_api_key")
     wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False,
-                     config=config, api_key=get_wandb_api_key())
+                     config=config, api_key=wand_api_key)
 
     for epoch in range(config["epochs"]):
         model.train()
@@ -105,23 +106,24 @@ if __name__ == '__main__':
 
     setup()
 
-    # Initialize Remote Ray -> does not work, get "Waiting for scheduling" and nothing happens
-    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+    ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
 
     # Initialize Local Ray
-    ray.init()
+    #ray.init()
 
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_train_" + now
     params = yaml.safe_load(open("params.yaml"))
     train_params = params["train-teacher"]
+
     config = {
         "epochs": train_params["epochs"],
         "lr": train_params["lr"],
         "batch_size": train_params["batch_size"],
         "exp_name": exp_name,
         "subset_size": params["core"]["subset_size"],
+        "wandb_api_key": os.environ.get("WANDB_API_KEY"),
     }
 
     # Launch distributed training
@@ -132,6 +134,8 @@ if __name__ == '__main__':
         run_config=get_run_config(),
     )
     result = trainer.fit()
+
+    print(result)
 
     # Ensure the model folder exists
     model_save_path = args.output_folder

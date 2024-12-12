@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
 from utils.utils import load_data, StudentModel, collate_fn
-from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key
+from utils.config import get_scaling_config, get_run_config, setup, get_wandb_api_key, get_ray_runtime_env
 import torch.nn.functional as F
 
 # Define device
@@ -63,8 +63,10 @@ def train_func(config):
     alpha = config["alpha"]
 
     # wb log
+    wand_api_key = config["wandb_api_key"]
+    config.pop("wandb_api_key")
     wb = setup_wandb(project="MSE-MLOps-distillation", trial_name=config["exp_name"], rank_zero_only=False,
-                     config=config, api_key=get_wandb_api_key())
+                     config=config, api_key=wand_api_key)
 
     for epoch in range(epochs):
         student.train()
@@ -140,7 +142,8 @@ if __name__ == '__main__':
 
     setup()
 
-    ray.init()
+    ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
+    #ray.init()
 
     # Get absolute path of the teacher dataset
     teacher_data_path = os.path.abspath(args.dataset_path)
@@ -164,7 +167,8 @@ if __name__ == '__main__':
             "temperature": train_params["temperature"],
             "alpha": train_params["alpha"],
             "exp_name": exp_name,
-            "subset_size": params["core"]["subset_size"]
+            "subset_size": params["core"]["subset_size"],
+            "wandb_api_key": os.environ.get("WANDB_API_KEY"),
         },
         datasets={
             "teacher_dataset": teacher_dataset

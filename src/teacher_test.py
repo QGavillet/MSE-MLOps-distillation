@@ -61,7 +61,6 @@ def evaluate_model(model, subset_size):
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
     now = now.strftime("%Y-%m-%d_%H-%M-%S")
     exp_name = "teacher_test_" + now
-    os.environ["WANDB_API_KEY"] = get_wandb_api_key()
     wandb.init(project="MSE-MLOps-distillation", name=exp_name)
     metrics = {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
     wandb.log(metrics)
