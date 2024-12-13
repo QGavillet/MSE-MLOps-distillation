@@ -21,15 +21,23 @@ from utils.config import get_scaling_config, get_run_config, setup, get_ray_runt
 import torch.nn.functional as F
 
 # Define device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("mps" if torch.backends.mps.is_available() else
+                      "cuda" if torch.cuda.is_available() else
+                      "cpu")
 
 
 # Distillation loss function
 def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha=0.5):
-    hard_loss = nn.CrossEntropyLoss()(y_student_pred, y_true)
-    soft_teacher_probs = F.softmax(teacher_pred / temperature, dim=1)
-    soft_student_probs = F.log_softmax(y_student_pred / temperature, dim=1)
-    soft_loss = F.kl_div(soft_student_probs, soft_teacher_probs, reduction="batchmean") * (temperature ** 2)
+    hard_loss_fn = nn.CrossEntropyLoss()
+    hard_loss = hard_loss_fn(y_student_pred, y_true)
+
+    teacher_probs = F.softmax(teacher_pred / temperature, dim=1)
+    soft_loss = F.kl_div(
+        F.log_softmax(y_student_pred / temperature, dim=1),
+        teacher_probs,
+        reduction="batchmean"
+    ) * (temperature ** 2)
+
     return alpha * hard_loss + (1 - alpha) * soft_loss
 
 
@@ -37,13 +45,14 @@ def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha
 def train_func(config):
     # Initialize models and prepare for distributed training
     student = StudentModel()
+    student = student.to(device)
     student = ray.train.torch.prepare_model(student)
 
     # Transform and DataLoader
     student_train_data, student_val_data = load_data(subset_size=config["subset_size"])
     student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False,
                                       collate_fn=collate_fn)
-    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False,
+    student_val_loader = DataLoader(student_val_data, batch_size=4, shuffle=False,
                                     collate_fn=collate_fn)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
     student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
@@ -86,8 +95,8 @@ def train_func(config):
             loss = distillation_loss(student_outputs, labels, teacher_output, temperature, alpha)
             loss.backward()
             student_optimizer.step()
-
             running_loss += loss.item()
+
 
         avg_train_loss = running_loss / len(student_train_loader)
 
@@ -167,7 +176,7 @@ if __name__ == '__main__':
             "temperature": train_params["temperature"],
             "alpha": train_params["alpha"],
             "exp_name": exp_name,
-            "subset_size": params["core"]["subset_size"],
+            "subset_size": train_params["subset_size"],
             "wandb_api_key": os.environ.get("WANDB_API_KEY"),
         },
         datasets={

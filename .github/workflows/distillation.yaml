@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   report:
+    if: github.ref != 'refs/heads/main'
     permissions: write-all
     runs-on: ubuntu-latest
     steps:

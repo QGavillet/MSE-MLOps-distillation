@@ -2,26 +2,29 @@ stages:
   teacher_train:
     cmd: python src/teacher_train.py
     deps:
-    - src/utils/utils.py
-    - src/teacher_train.py
+      - src/utils/utils.py
+      - src/teacher_train.py
     params:
-    - train-teacher
+      - train-teacher
     outs:
-    - models/teacher.pt
+      - models/teacher.pt
     plots:
-    - metrics/teacher/training_plot.png
+      - metrics/teacher/training_plot.png
 
   teacher_test:
     cmd: python src/teacher_test.py
     deps:
-    - src/teacher_test.py
-    - models/teacher.pt
+      - src/teacher_test.py
+      - models/teacher.pt
+    params:
+      - train-teacher
+      - train-student
     outs:
-    - data/teacher.npy
+      - data/teacher.npy
     metrics:
-    - metrics/teacher/metrics.json
+      - metrics/teacher/metrics.json
     plots:
-    - metrics/teacher/confusion_matrix.png
+      - metrics/teacher/confusion_matrix.png
 
   student_train:
     cmd: python src/student_train.py
@@ -29,16 +32,20 @@ stages:
       - src/utils/utils.py
       - src/student_train.py
       - data/teacher.npy
+    params:
+      - train-student
     outs:
-    - models/student.pt
+      - models/student.pt
     plots:
-    - metrics/student/training_plot.png
+      - metrics/student/training_plot.png
 
   student_test:
     cmd: python src/student_test.py
     deps:
       - src/student_test.py
       - models/student.pt
+    params:
+      - train-student
     metrics:
       - metrics/student/metrics.json
     plots:

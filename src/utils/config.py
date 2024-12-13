@@ -1,3 +1,5 @@
+import os
+
 import ray
 from dotenv import load_dotenv
 from ray.runtime_env import RuntimeEnv
@@ -25,11 +27,11 @@ def get_ray_runtime_env():
                 "matplotlib==3.9.2",
                 "datasets==3.1.0"
             ],
-        },
-        py_modules=["utils.utils", "utils.config"],
+        }
     )
 
 
 def setup():
     set_seed(16)
     load_dotenv()
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'gcs_credentials.json'

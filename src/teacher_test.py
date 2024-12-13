@@ -110,12 +110,13 @@ if __name__ == '__main__':
     trained_model = torch.nn.DataParallel(trained_model)
 
     # Subset size
-    subset_size = yaml.safe_load(open("params.yaml"))["core"]["subset_size"]
+    subset_size = yaml.safe_load(open("params.yaml"))["train-teacher"]["subset_size"]
 
     # Evaluate the model
     evaluate_model(trained_model, subset_size)
 
     # Create dataset for the student model
+    subset_size = yaml.safe_load(open("params.yaml"))["train-student"]["subset_size"]
     data_save_path = args.output_folder
     os.makedirs(data_save_path, exist_ok=True)
     create_dataset(trained_model, data_save_path, subset_size)
