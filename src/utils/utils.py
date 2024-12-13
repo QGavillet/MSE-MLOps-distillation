@@ -40,7 +40,7 @@ def apply_test_transform(data):
 
 
 def load_data(subset_size=None):
-    if subset_size is None:
+    if subset_size is None or subset_size == "None":
         data = load_dataset('cifar10')
         train_ds = data['train']
         test_ds = data['test']
@@ -50,7 +50,8 @@ def load_data(subset_size=None):
         train_split = 'train[:{}]'.format(train_size)
         test_split = 'test[:{}]'.format(test_size)
         train_ds, test_ds = load_dataset('cifar10', split=[train_split, test_split])
-        print(train_ds.shape)
+
+    print(f"Train size: {len(train_ds)}, Test size: {len(test_ds)}")
 
     train_ds.set_transform(apply_train_transform)
     test_ds.set_transform(apply_test_transform)

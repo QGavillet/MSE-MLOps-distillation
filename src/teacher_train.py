@@ -16,24 +16,26 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from utils.utils import load_data, TeacherModel, collate_fn
 
-
 # Define device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("mps" if torch.backends.mps.is_available() else
+                      "cuda" if torch.cuda.is_available() else
+                      "cpu")
 
 
 def train_func(config):
     model = TeacherModel()
+    model = model.to(device)
     model = ray.train.torch.prepare_model(model)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=config["lr"])
+    optimizer = Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
 
     subset_size = config["subset_size"]
-    if subset_size is None:
+    if subset_size is None or subset_size == "None":
         subset_size = 6000
     train_data, val_data = load_data(subset_size=subset_size)
     train_loader = DataLoader(train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
-    val_loader = DataLoader(val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    val_loader = DataLoader(val_data, batch_size=4, shuffle=False, collate_fn=collate_fn)
     train_loader = ray.train.torch.prepare_data_loader(train_loader)
     val_loader = ray.train.torch.prepare_data_loader(val_loader)
 
@@ -107,10 +109,7 @@ if __name__ == '__main__':
 
     setup()
 
-    # Initialize Remote Ray -> does not work, get "Waiting for scheduling" and nothing happens
-    #ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
-
-    # Initialize Local Ray
+    # ray.init(address="ray://localhost:10001", runtime_env=get_ray_runtime_env())
     ray.init()
 
     now = datetime.now(tz=pytz.timezone('Europe/Zurich'))
@@ -123,8 +122,9 @@ if __name__ == '__main__':
         "epochs": train_params["epochs"],
         "lr": train_params["lr"],
         "batch_size": train_params["batch_size"],
+        "weight_decay": train_params["weight_decay"],
         "exp_name": exp_name,
-        "subset_size": params["core"]["subset_size"],
+        "subset_size": train_params["subset_size"],
         "wandb_api_key": os.environ.get("WANDB_API_KEY"),
     }
 
@@ -136,8 +136,6 @@ if __name__ == '__main__':
         run_config=get_run_config(),
     )
     result = trainer.fit()
-
-    print(result)
 
     # Ensure the model folder exists
     model_save_path = args.output_folder

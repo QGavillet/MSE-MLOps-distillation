@@ -88,7 +88,7 @@ if __name__ == '__main__':
     trained_model = torch.nn.DataParallel(trained_model)
 
     # Subset size
-    subset_size = yaml.safe_load(open("params.yaml"))["core"]["subset_size"]
+    subset_size = yaml.safe_load(open("params.yaml"))["train-student"]["subset_size"]
 
     # Evaluate the model
     evaluate_model(trained_model, subset_size)
