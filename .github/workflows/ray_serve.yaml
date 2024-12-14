@@ -90,12 +90,13 @@ jobs:
       - name: Start port-forward
         run: |
           kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
-          sleep 5
+          sleep 3
           if ! nc -z localhost 8265; then
               echo "Port-forward failed to start. Logs:"
               cat port-forward.log
               exit 1
           fi
+          sleep 3
 
       - name: Deploy combined application
         run: serve deploy ray_serve_config.yaml --address http://localhost:8265
