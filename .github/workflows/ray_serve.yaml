@@ -27,58 +27,58 @@ jobs:
         run: dvc pull
 
       # Build the teacher application
-      - name: Build teacher_app
-        run: serve build src.ray_serve:teacher_app -o teacher_serve_config.yaml
-
-      # Build the student application
-      - name: Build student_app
-        run: serve build src.ray_serve:student_app -o student_serve_config.yaml
-
-      - name: Install yq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
-          chmod +x yq
-          sudo mv yq /usr/local/bin/yq
-
-      - name: Merge teacher and student configs
-        run: |
-          # Merge applications arrays from teacher_serve_config.yaml and student_serve_config.yaml
-          yq eval-all '.[0].applications += .[1].applications | .[0]' teacher_serve_config.yaml student_serve_config.yaml > combined.yaml
-
-      - name: Add runtime_env to both applications
-        run: |
-          # Add runtime_env with pip pointing to requirements.txt
-          # This sets the same runtime_env for both applications in the merged file
-          yq -i '.applications[].runtime_env = {"pip": ["-r requirements.txt"]}' combined.yaml
-
-      - name: Set route_prefix for teacher and student
-        run: |
-          yq -i '.applications[] | select(.name == "teacher").route_prefix = "/teacher"' combined.yaml
-          yq -i '.applications[] | select(.name == "student").route_prefix = "/student"' combined.yaml
-
-      - name: Set import paths
-        run: |
-          yq -i '.applications[] | select(.name == "teacher").import_path = "src.ray_serve:teacher_app"' combined.yaml
-          yq -i '.applications[] | select(.name == "student").import_path = "src.ray_serve:student_app"' combined.yaml
-
-      - name: Set deployment options for teacher
-        run: |
-          yq -i '.applications[] | select(.name == "teacher").deployments[0].num_replicas = 1' combined.yaml
-          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.num_cpus = 0.8' combined.yaml
-          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.num_gpus = 0.0' combined.yaml
-          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.memory = 6442450944.0' combined.yaml
-
-      - name: Set deployment options for student
-        run: |
-          yq -i '.applications[] | select(.name == "student").deployments[0].num_replicas = 1' combined.yaml
-          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.num_cpus = 0.8' combined.yaml
-          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.num_gpus = 0.0' combined.yaml
-          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.memory = 6442450944.0' combined.yaml
-
-      - name: Show final combined.yaml for debugging
-        run: cat combined.yaml
+#      - name: Build teacher_app
+#        run: serve build src.ray_serve:teacher_app -o teacher_serve_config.yaml
+#
+#      # Build the student application
+#      - name: Build student_app
+#        run: serve build src.ray_serve:student_app -o student_serve_config.yaml
+#
+#      - name: Install yq
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y jq
+#          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
+#          chmod +x yq
+#          sudo mv yq /usr/local/bin/yq
+#
+#      - name: Merge teacher and student configs
+#        run: |
+#          # Merge applications arrays from teacher_serve_config.yaml and student_serve_config.yaml
+#          yq eval-all '.[0].applications += .[1].applications | .[0]' teacher_serve_config.yaml student_serve_config.yaml > combined.yaml
+#
+#      - name: Add runtime_env to both applications
+#        run: |
+#          # Add runtime_env with pip pointing to requirements.txt
+#          # This sets the same runtime_env for both applications in the merged file
+#          yq -i '.applications[].runtime_env = {"pip": ["-r requirements.txt"]}' combined.yaml
+#
+#      - name: Set route_prefix for teacher and student
+#        run: |
+#          yq -i '.applications[] | select(.name == "teacher").route_prefix = "/teacher"' combined.yaml
+#          yq -i '.applications[] | select(.name == "student").route_prefix = "/student"' combined.yaml
+#
+#      - name: Set import paths
+#        run: |
+#          yq -i '.applications[] | select(.name == "teacher").import_path = "src.ray_serve:teacher_app"' combined.yaml
+#          yq -i '.applications[] | select(.name == "student").import_path = "src.ray_serve:student_app"' combined.yaml
+#
+#      - name: Set deployment options for teacher
+#        run: |
+#          yq -i '.applications[] | select(.name == "teacher").deployments[0].num_replicas = 1' combined.yaml
+#          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.num_cpus = 0.8' combined.yaml
+#          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.num_gpus = 0.0' combined.yaml
+#          yq -i '.applications[] | select(.name == "teacher").deployments[0].ray_actor_options.memory = 6442450944.0' combined.yaml
+#
+#      - name: Set deployment options for student
+#        run: |
+#          yq -i '.applications[] | select(.name == "student").deployments[0].num_replicas = 1' combined.yaml
+#          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.num_cpus = 0.8' combined.yaml
+#          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.num_gpus = 0.0' combined.yaml
+#          yq -i '.applications[] | select(.name == "student").deployments[0].ray_actor_options.memory = 6442450944.0' combined.yaml
+#
+#      - name: Show final combined.yaml for debugging
+#        run: cat combined.yaml
 
       - name: Set up kubeconfig
         run: |
@@ -98,7 +98,7 @@ jobs:
           fi
 
       - name: Deploy combined application
-        run: serve deploy combined.yaml --address http://localhost:8265
+        run: serve deploy ray_serve_config.yaml --address http://localhost:8265
 
       - name: Port-forward Ray Serve HTTP Endpoint
         run: |
