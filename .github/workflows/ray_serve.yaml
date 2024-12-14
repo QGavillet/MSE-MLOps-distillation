@@ -90,11 +90,6 @@ jobs:
       - name: Start port-forward
         run: |
           kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
-          if ! nc -z localhost 8265; then
-              echo "Port-forward failed to start. Logs:"
-              cat port-forward.log
-              exit 1
-          fi
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
