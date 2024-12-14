@@ -1,0 +1,4 @@
+[core]
+    remote = google-cloud-storage
+['remote "google-cloud-storage"']
+    url = gs://mlops-distillation

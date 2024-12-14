@@ -1,6 +1,14 @@
 .idea
-models
-data
+gcs_credentials.json
+
+wandb
+metrics/*
+!metrics/*.dvc
+
+models/*
+!models/*.dvc
+data/*
+!data/*.dvc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -130,6 +138,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+venv2/
 ENV/
 env.bak/
 venv.bak/
@@ -164,3 +173,6 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+/metrics-teacher.json
+
+distillation-service-key.json

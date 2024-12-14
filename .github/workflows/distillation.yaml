@@ -1,0 +1,110 @@
+name: Distillation
+
+on:
+  # Runs on pushes targeting main branch
+  push:
+  #  branches:
+  #    - main
+
+  # Runs on pull requests
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow the creation and usage of self-hosted runners
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  report:
+    if: github.ref != 'refs/heads/main'
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+      - name: Login to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: DVC Pull
+        run: dvc repro --pull teacher_test student_test
+
+      - name: Setup CML
+        uses: iterative/setup-cml@v2
+        with:
+          version: '0.20.0'
+      - name: Create CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch all other Git branches
+          git fetch --depth=1 origin main:main
+
+          # Add title to the report
+          echo "# Experiment Report (${{ github.sha }})" >> report.md
+
+          # Compare parameters to main branch
+          echo "## Params workflow vs. main" >> report.md
+          dvc params diff main --md >> report.md
+
+          # Compare metrics to main branch
+          echo "## Metrics workflow vs. main" >> report.md
+          dvc metrics diff main --md >> report.md
+
+          # Compare plots (images) to main branch
+          dvc plots diff main
+
+          # Create teacher plots
+          echo "## Teacher Plots" >> report.md
+
+          # Create training history plot
+          echo "### Training History" >> report.md
+          echo "#### main" >> report.md
+          echo '![](./dvc_plots/static/main_metrics_teacher_training_plot.png "Training History")' >> report.md
+          echo "#### workspace" >> report.md
+          echo '![](./dvc_plots/static/workspace_metrics_teacher_training_plot.png "Training History")' >> report.md
+
+          # Create confusion matrix
+          echo "### Confusion Matrix" >> report.md
+          echo "#### main" >> report.md
+          echo '![](./dvc_plots/static/main_metrics_teacher_confusion_matrix.png "Confusion Matrix")' >> report.md
+          echo "#### workspace" >> report.md
+          echo '![](./dvc_plots/static/workspace_metrics_teacher_confusion_matrix.png "Confusion Matrix")' >> report.md
+          
+          # Create student plots
+          echo "## Student Plots" >> report.md
+
+          # Create training history plot
+          echo "### Training History" >> report.md
+          echo "#### main" >> report.md
+          echo '![](./dvc_plots/static/main_metrics_student_training_plot.png "Training History")' >> report.md
+          echo "#### workspace" >> report.md
+          echo '![](./dvc_plots/static/workspace_metrics_student_training_plot.png "Training History")' >> report.md
+
+          # Create confusion matrix
+          echo "### Confusion Matrix" >> report.md
+          echo "#### main" >> report.md
+          echo '![](./dvc_plots/static/main_metrics_student_confusion_matrix.png "Confusion Matrix")' >> report.md
+          echo "#### workspace" >> report.md
+          echo '![](./dvc_plots/static/workspace_metrics_student_confusion_matrix.png "Confusion Matrix")' >> report.md
+
+          # Publish the CML report
+          cml comment update --target=commit --publish report.md
+      - name : Update metrics
+        run : dvc push

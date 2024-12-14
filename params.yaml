@@ -1,0 +1,14 @@
+train-teacher:
+  lr: 0.00002
+  epochs: 3
+  batch_size: 10
+  weight_decay: 0.01
+  subset_size: 6000 # None if you want to use the entire dataset
+
+train-student:
+  lr: 0.00005
+  epochs: 10
+  batch_size: 8
+  temperature: 3
+  alpha: 0.8
+  subset_size: 6000 # None if you want to use the entire dataset
