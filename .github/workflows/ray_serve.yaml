@@ -90,6 +90,33 @@ jobs:
       - name: Start port-forward
         run: |
           kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
+          sleep 10
+          if ! nc -z localhost 8265; then
+              echo "Port-forward failed to start. Logs:"
+              cat port-forward.log
+              exit 1
+          fi
+
+      - name: Create Tag
+        id: create_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Generate a tag name. Customize this as needed.
+          TAG_NAME=v1.0.${{ github.run_number }}
+          
+          # Configure Git with a user name and email
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create an annotated tag
+          git tag -a $TAG_NAME -m "Release $TAG_NAME"
+          
+          # Push the tag to the repository
+          git push origin $TAG_NAME
+          
+          # Export the tag name to be used in subsequent steps
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
