@@ -103,12 +103,16 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            github.rest.git.createRef({
+            const tagNumber = `${{ github.run_number }}`;
+            const tagName = `v${tagNumber}`;
+            await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/' + ${{ github.run_number }},
+              ref: `refs/tags/${tagName}`,
               sha: context.sha
             })
+            
+            core.setOutput('tag_name', tagName)
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
