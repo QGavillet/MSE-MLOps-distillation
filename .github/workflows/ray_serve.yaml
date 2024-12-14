@@ -84,6 +84,7 @@ jobs:
         run: |
           mkdir -p ~/.kube
           echo $K8S_CONFIG | base64 -d > ~/.kube/config
+          sleep 3
         env:
           K8S_CONFIG: ${{ secrets.K8S_CONFIG }}
 
@@ -104,12 +105,13 @@ jobs:
       - name: Port-forward Ray Serve HTTP Endpoint
         run: |
           kubectl port-forward service/raycluster-kuberay-head-svc 8000:8000 > port-forward-serve.log 2>&1 &
-          sleep 5
+          sleep 3
           if ! nc -z localhost 8000; then
               echo "Port-forward of serve endpoint failed. Logs:"
               cat port-forward-serve.log
               exit 1
           fi
+          sleep 3
 
       - name: Test Deployment
         run: |
