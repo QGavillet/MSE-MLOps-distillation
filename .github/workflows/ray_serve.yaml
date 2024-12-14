@@ -99,8 +99,37 @@ jobs:
           fi
           sleep 3
 
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag_name }}
+          release_name: "Release from ${{ github.ref }}"
+          draft: false
+          prerelease: false
+
+      - name: Echo release info
+        run: |
+          echo "Release name: Release from ${{ github.ref }}"
+          echo "Download URL for the source code (zip): https://github.com/${{ github.repository }}/archive/refs/tags/${{ steps.create_tag.outputs.tag_name }}.zip"
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
+          chmod +x yq
+          sudo mv yq /usr/local/bin/yq
+
+      - name: Create combined.yaml from ray_serve_config.yaml
+        run: |
+          cp ray_serve_config.yaml combined.yaml
+          yq -i '.applications[].runtime_env.working_dir = "https://github.com/${{ github.repository }}/archive/refs/tags/${{ steps.create_tag.outputs.tag_name }}.zip"' combined.yaml
+
+
       - name: Deploy combined application
-        run: serve deploy ray_serve_config.yaml --address http://localhost:8265
+        run: serve deploy combined.yaml --address http://localhost:8265
 
       - name: Port-forward Ray Serve HTTP Endpoint
         run: |
