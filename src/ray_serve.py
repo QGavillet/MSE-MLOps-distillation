@@ -7,15 +7,20 @@ from torchvision import models, transforms
 from PIL import Image
 import io
 
-from src.utils.utils import TeacherModel
+from src.utils.utils import TeacherModel, StudentModel
 
 
 @serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024 }, name="student", route_prefix="/student")
 class StudentClassifier:
     def __init__(self):
-        # Pre-trained MobileNetV2 on ImageNet
-        self.model = models.mobilenet_v2(weights="IMAGENET1K_V1")
+        # Load the trained model
+        trained_model = StudentModel()
+        checkpoint = torch.load("./models/student.pt", weights_only=True)
+        checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
+        trained_model.load_state_dict(checkpoint)
+        self.model = torch.nn.DataParallel(trained_model)
         self.model.eval()
+
 
         # Replace the classifier for CIFAR-10 (10 classes)
         in_features = self.model.classifier[1].in_features
