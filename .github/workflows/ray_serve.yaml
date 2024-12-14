@@ -75,13 +75,16 @@ jobs:
         run: zip -r code_and_models.zip .
 
         # Upload the zip file as a release asset
-      - name: Upload combined code and models
+      - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: code_and_models.zip
           asset_name: code_and_models.zip
           asset_content_type: application/zip
+
 
       - name: Echo release info
         run: |
