@@ -34,16 +34,6 @@ jobs:
         env:
           K8S_CONFIG: ${{ secrets.K8S_CONFIG }}
 
-      - name: Start port-forward
-        run: |
-          kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
-          sleep 10
-          if ! nc -z localhost 8265; then
-              echo "Port-forward failed to start. Logs:"
-              cat port-forward.log
-              exit 1
-          fi
-
       - name: Create tag
         id: create_tag
         uses: actions/github-script@v5
@@ -99,6 +89,17 @@ jobs:
           wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
           chmod +x yq
           sudo mv yq /usr/local/bin/yq
+
+      - name: Start port-forward
+        run: |
+          kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
+          sleep 10
+          if ! nc -z localhost 8265; then
+              echo "Port-forward failed to start. Logs:"
+              cat port-forward.log
+              exit 1
+          fi
+          
 
       - name: Create combined.yaml from ray_serve_config.yaml
         run: |
