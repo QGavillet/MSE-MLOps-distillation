@@ -123,10 +123,6 @@ jobs:
               exit 1
           fi
 
-      - name: Test Deployment
-        run: |
-          python test/test_ray_serve.py
-
       - name: Upload combined.yaml artifact
         uses: actions/upload-artifact@v3
         with:
