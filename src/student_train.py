@@ -16,7 +16,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_data, StudentModel, collate_fn
+from utils.utils import load_data, collate_fn
 from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 import torch.nn.functional as F
 
@@ -41,10 +41,43 @@ def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha
     return alpha * hard_loss + (1 - alpha) * soft_loss
 
 
+class SmallCNN(nn.Module):
+    def __init__(self, num_classes=10, input_size=224):
+        super(SmallCNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout(0.5)
+
+        # Dynamically compute the size of the flattened feature map
+        self._flattened_size = self._get_flattened_size(input_size)
+
+        self.fc1 = nn.Linear(self._flattened_size, 256)
+        self.fc2 = nn.Linear(256, num_classes)
+
+    def _get_flattened_size(self, input_size):
+        with torch.no_grad():
+            x = torch.zeros(1, 3, input_size, input_size)
+            x = self.pool(F.relu(self.conv1(x)))
+            x = self.pool(F.relu(self.conv2(x)))
+            x = self.pool(F.relu(self.conv3(x)))
+        return x.numel()
+
+    def forward(self, pixel_values, labels=None):
+        x = self.pool(F.relu(self.conv1(pixel_values)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = x.view(x.size(0), -1)  # Flatten the feature maps
+        x = self.dropout(F.relu(self.fc1(x)))
+        x = self.fc2(x)
+        return x
+
+
 # Ray training function
 def train_func(config):
     # Initialize models and prepare for distributed training
-    student = StudentModel()
+    student = SmallCNN()
     student = student.to(device)
     student = ray.train.torch.prepare_model(student)
 
@@ -52,7 +85,7 @@ def train_func(config):
     student_train_data, student_val_data = load_data(subset_size=config["subset_size"])
     student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False,
                                       collate_fn=collate_fn)
-    student_val_loader = DataLoader(student_val_data, batch_size=4, shuffle=False,
+    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False,
                                     collate_fn=collate_fn)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
     student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
