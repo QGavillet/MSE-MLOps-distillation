@@ -97,26 +97,17 @@ jobs:
               exit 1
           fi
 
-      - name: Create Tag
+      - name: Create tag
         id: create_tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Generate a tag name. Customize this as needed.
-          TAG_NAME=v1.0.${{ github.run_number }}
-          
-          # Configure Git with a user name and email
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Create an annotated tag
-          git tag -a $TAG_NAME -m "Release $TAG_NAME"
-          
-          # Push the tag to the repository
-          git push origin $TAG_NAME
-          
-          # Export the tag name to be used in subsequent steps
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/' + ${{ github.run_number }},
+              sha: context.sha
+            })
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
