@@ -54,10 +54,10 @@ applications:
 
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v27/code_and_models.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v32/code_and_models.zip"
     pip:
       # Ref to github raw file
-      - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/ray_serve/requirements.txt"
+      - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
   deployments:
   - name: student
     num_replicas: 1

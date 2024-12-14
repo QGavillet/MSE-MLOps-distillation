@@ -51,7 +51,7 @@ It then generates a ray_serve_config.yaml file and we need to add the working di
 ```yaml
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/archive/refs/heads/ray_serve.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v27/code_and_models.zip"
     pip:
       # Ref to github raw file
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
@@ -61,6 +61,7 @@ It then generates a ray_serve_config.yaml file and we need to add the working di
 Essential step: we need to add the port forwarding to access our k8s cluster. For the deployment, we need to forward the `8265` port and for the testing it's the `8000` port.
 
 ### Deploy
+Done automatically by the github action. But if you want to do it manually, you can run the following command:
 ```bash
  serve deploy ray_serve_config.yaml
  ```
@@ -70,14 +71,6 @@ Deploy our newly create file to the ray cluster
 ### Testing
 To test our newly create example, run this python code:
 
-```python
-# File name: model_client.py
-import requests
-
-english_text = "Hello world! How are you doing today?"
-
-response = requests.post("http://localhost:8000/", json=english_text)
-french_text = response.text
-
-print(french_text)
+```bash
+python test/test_ray_serve.py
 ```
