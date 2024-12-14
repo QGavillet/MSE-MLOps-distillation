@@ -3,7 +3,8 @@ name: Ray Serve Deployment
 on:
   push:
   workflow_dispatch:
-
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,21 +27,6 @@ jobs:
       - name: DVC Pull
         run: dvc pull
 
-      - name: Build teacher_app
-        run: ray serve build src.ray_serve:teacher_app -o teacher_serve_config.yaml
-
-      - name: Build student_app
-        run: ray serve build src.ray_serve:student_app -o student_serve_config.yaml
-
-      - name: Install kubectl
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
-          curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update
-          sudo apt-get install -y kubectl
-
       - name: Set up kubeconfig
         run: |
           mkdir -p ~/.kube
@@ -50,44 +36,96 @@ jobs:
 
       - name: Start port-forward
         run: |
-          # Forward the Ray Dashboard to localhost:8265
           kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265 > port-forward.log 2>&1 &
-          sleep 5
+          sleep 10
           if ! nc -z localhost 8265; then
               echo "Port-forward failed to start. Logs:"
               cat port-forward.log
               exit 1
           fi
 
-      - name: Deploy teacher_app
-        run: ray serve deploy teacher_serve_config.yaml --address http://localhost:8265
+      - name: Create tag
+        id: create_tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const tagNumber = `${{ github.run_number }}`;
+            const tagName = `v${tagNumber}`;
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tagName}`,
+              sha: context.sha
+            })
+            
+            core.setOutput('tag_name', tagName)
 
-      - name: Deploy student_app
-        run: ray serve deploy student_serve_config.yaml --address http://localhost:8265
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag_name }}
+          release_name: "Release from ${{ github.ref }}"
+          draft: false
+          prerelease: false
+
+        # After DVC pull, create a zip file containing code + models
+      - name: Archive code and models into zip
+        run: zip -r code_and_models.zip .
+
+        # Upload the zip file as a release asset
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: code_and_models.zip
+          asset_name: code_and_models.zip
+          asset_content_type: application/zip
+
+
+      - name: Echo release info
+        run: |
+          echo "Release name: Release from ${{ github.ref }}"
+          echo "Download URL for the source code (zip): https://github.com/${{ github.repository }}/archive/refs/tags/${{ steps.create_tag.outputs.tag_name }}.zip"
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
+          chmod +x yq
+          sudo mv yq /usr/local/bin/yq
+
+      - name: Create combined.yaml from ray_serve_config.yaml
+        run: |
+          cp ray_serve_config.yaml combined.yaml
+          yq -i '.applications[].runtime_env.working_dir = "https://github.com/${{ github.repository }}/archive/refs/tags/${{ steps.create_tag.outputs.tag_name }}/code_and_models.zip"' combined.yaml
+
+      - name: Deploy combined application
+        run: serve deploy combined.yaml --address http://localhost:8265
 
       - name: Port-forward Ray Serve HTTP Endpoint
         run: |
-          kubectl port-forward service/raycluster-kuberay-head-svc 8000:8000 > port-forward-serve.log 2>&1 &
           sleep 5
+          kubectl port-forward service/raycluster-kuberay-head-svc 8000:8000 > port-forward-serve.log 2>&1 &
+          sleep 3
           if ! nc -z localhost 8000; then
               echo "Port-forward of serve endpoint failed. Logs:"
               cat port-forward-serve.log
               exit 1
           fi
+          sleep 3
 
       - name: Test Deployment
         run: |
           python test/test_ray_serve.py
 
-      # Upload the generated configuration artifacts for debugging or archiving
-      - name: Upload teacher_serve_config.yaml artifact
-        uses: actions/upload-artifact@v2
+      - name: Upload combined.yaml artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: teacher_serve_config_artifact
-          path: teacher_serve_config.yaml
-
-      - name: Upload student_serve_config.yaml artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: student_serve_config_artifact
-          path: student_serve_config.yaml
+          name: combined_config_artifact
+          path: combined.yaml
