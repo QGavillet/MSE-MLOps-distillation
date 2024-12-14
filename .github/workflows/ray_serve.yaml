@@ -127,7 +127,7 @@ jobs:
           cp ray_serve_config.yaml combined.yaml
           yq -i '.applications[].runtime_env.working_dir = "https://github.com/${{ github.repository }}/archive/refs/tags/${{ steps.create_tag.outputs.tag_name }}.zip"' combined.yaml
 
-
+#
       - name: Deploy combined application
         run: serve deploy combined.yaml --address http://localhost:8265
 
