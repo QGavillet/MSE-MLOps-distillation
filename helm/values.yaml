@@ -1,0 +1,37 @@
+image:
+  tag: 2.38.0
+  pullPolicy: IfNotPresent
+
+head:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+
+worker:
+  groupName: workergroup
+  replicas: 1
+  minReplicas: 1
+  maxReplicas: 4
+  image:
+    repository: rayproject/ray
+    tag: 2.38.0
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: "4"
+      memory: "32Gi"
+    requests:
+      cpu: "2"
+      memory: "12Gi"
+
+
+headService:
+  metadata:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+
