@@ -7,8 +7,8 @@ from torchvision import transforms
 from PIL import Image
 import io
 
-from src.student_train import SmallCNN
 from src.utils.utils import TeacherModel
+from src.student_train import SmallCNN
 
 
 @serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="student", route_prefix="/student")

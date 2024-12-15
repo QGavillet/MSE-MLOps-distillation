@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
 from transformers import ViTFeatureExtractor, ViTImageProcessor
-from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
+from src.utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 import torch.nn.functional as F
 
 # Define device

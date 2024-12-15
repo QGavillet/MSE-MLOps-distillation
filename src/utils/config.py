@@ -4,7 +4,7 @@ import ray
 from dotenv import load_dotenv
 from ray.runtime_env import RuntimeEnv
 from ray.train import ScalingConfig
-from utils.utils import set_seed
+from src.utils.utils import set_seed
 
 
 def get_scaling_config():
