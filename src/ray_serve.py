@@ -7,7 +7,7 @@ from torchvision import transforms
 from PIL import Image
 import io
 
-from src.student_train import SmallCNN
+from student_train import SmallCNN
 from src.utils.utils import TeacherModel
 
 
