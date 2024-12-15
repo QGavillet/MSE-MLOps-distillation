@@ -1,5 +1,5 @@
 import ray
-from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
+from src.utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 from ray.air.integrations.wandb import setup_wandb
 import ray.train.torch
 import argparse
@@ -14,7 +14,7 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from utils.utils import load_data, TeacherModel, collate_fn
+from src.utils.utils import load_data, TeacherModel, collate_fn
 
 # Define device
 device = torch.device("mps" if torch.backends.mps.is_available() else

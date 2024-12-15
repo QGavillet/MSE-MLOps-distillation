@@ -6,10 +6,10 @@ import yaml
 from matplotlib import pyplot as plt
 import numpy as np
 
-from student_train import SmallCNN
-from utils.utils import collate_fn
-from utils.utils import load_data
-from utils.config import setup
+from src.student_train import SmallCNN
+from src.utils.utils import collate_fn
+from src.utils.utils import load_data
+from src.utils.config import setup
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score

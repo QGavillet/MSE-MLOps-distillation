@@ -7,11 +7,6 @@ from torchvision import transforms
 from PIL import Image
 import io
 
-import sys
-import os
-# Add the src directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
-
 from src.utils.utils import TeacherModel
 from src.student_train import SmallCNN
 
