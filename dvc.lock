@@ -47,7 +47,7 @@ stages:
           batch_size: 32
           temperature: 5
           alpha: 0.3
-          subset_size: 6000
+          subset_size: 300
         train-teacher:
           lr: 2e-05
           epochs: 3
@@ -57,8 +57,8 @@ stages:
     outs:
     - path: data/teacher.npy
       hash: md5
-      md5: 7e95a0bdbe7068f28b84fbf1243be3a3
-      size: 192128
+      md5: 5ab71866550ae7d2d428d355e44b8d65
+      size: 9728
     - path: metrics/teacher/confusion_matrix.png
       hash: md5
       md5: 6a29a5bbb32237d294bd64c501da736b
@@ -72,8 +72,8 @@ stages:
     deps:
     - path: data/teacher.npy
       hash: md5
-      md5: 7e95a0bdbe7068f28b84fbf1243be3a3
-      size: 192128
+      md5: 5ab71866550ae7d2d428d355e44b8d65
+      size: 9728
     - path: src/student_train.py
       hash: md5
       md5: c0945867ce61a984bfe42d59e03fc448
@@ -90,22 +90,22 @@ stages:
           batch_size: 32
           temperature: 5
           alpha: 0.3
-          subset_size: 6000
+          subset_size: 300
     outs:
     - path: metrics/student/training_plot.png
       hash: md5
-      md5: fc5c8154ed807a248e523eb1009c2838
-      size: 31120
+      md5: 7f5d2ff5d1c33330c103acc532ddcdad
+      size: 32953
     - path: models/student.pt
       hash: md5
-      md5: 9e9f2aaad73fe45319ee9241d74c7368
+      md5: 7e49c59daeb8c0dd8b301bea35ddb38b
       size: 103147868
   student_test:
     cmd: python src/student_test.py
     deps:
     - path: models/student.pt
       hash: md5
-      md5: 9e9f2aaad73fe45319ee9241d74c7368
+      md5: 7e49c59daeb8c0dd8b301bea35ddb38b
       size: 103147868
     - path: src/student_test.py
       hash: md5
@@ -119,13 +119,13 @@ stages:
           batch_size: 32
           temperature: 5
           alpha: 0.3
-          subset_size: 6000
+          subset_size: 300
     outs:
     - path: metrics/student/confusion_matrix.png
       hash: md5
-      md5: 89d9432f1bd68ff11aa3a655c8bc3148
-      size: 51159
+      md5: 4cc66b171307b58ad4c4bac8173de532
+      size: 34466
     - path: metrics/student/metrics.json
       hash: md5
-      md5: f2fcf2869f9afa017517488a54a33c5c
-      size: 122
+      md5: 155aa8bd11431a0175e41adb911b2465
+      size: 124
