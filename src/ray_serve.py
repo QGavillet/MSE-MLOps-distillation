@@ -3,18 +3,20 @@ from ray.serve import metrics
 from ray import serve
 import torch
 import torch.nn.functional as F
-from torchvision import models, transforms
+from torchvision import transforms
 from PIL import Image
 import io
 
-from src.utils.utils import TeacherModel, StudentModel
+from src.student_train import SmallCNN
+from src.utils.utils import TeacherModel
 
 
 @serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="student", route_prefix="/student")
 class StudentClassifier:
     def __init__(self):
         # Load the student model using the provided checkpoint
-        self.model = StudentModel()
+
+        self.model = SmallCNN()
         checkpoint = torch.load("./models/student.pt", map_location="cpu")
         checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
         self.model.load_state_dict(checkpoint)
