@@ -7,8 +7,13 @@ from torchvision import transforms
 from PIL import Image
 import io
 
-from src.student_train import SmallCNN
+import sys
+import os
+# Add the src directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+
 from src.utils.utils import TeacherModel
+from src.student_train import SmallCNN
 
 
 @serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 0.8, "num_gpus": 0, "memory": 6 * 1024 * 1024 * 1024}, name="student", route_prefix="/student")

@@ -33,7 +33,7 @@ applications:
   import_path: src.ray_serve:teacher_app
 
   runtime_env:
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v27/code_and_models.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v36/code_and_models.zip"
     pip:
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/ray_serve/requirements.txt"
 
@@ -54,7 +54,7 @@ applications:
 
   runtime_env:
     # Example with a release
-    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v32/code_and_models.zip"
+    working_dir: "https://github.com/QGavillet/MSE-MLOps-distillation/releases/download/v36/code_and_models.zip"
     pip:
       # Ref to github raw file
       - "-r https://raw.githubusercontent.com/QGavillet/MSE-MLOps-distillation/refs/heads/main/requirements.txt"
