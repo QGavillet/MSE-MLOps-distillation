@@ -42,7 +42,7 @@ stages:
     params:
       params.yaml:
         train-student:
-          lr: 0.0001
+          lr: 0.001
           epochs: 10
           batch_size: 32
           temperature: 5
@@ -76,8 +76,8 @@ stages:
       size: 192128
     - path: src/student_train.py
       hash: md5
-      md5: 9fd7c32baadd4f891947179b54137e48
-      size: 8881
+      md5: c0945867ce61a984bfe42d59e03fc448
+      size: 9993
     - path: src/utils/utils.py
       hash: md5
       md5: 9bc58ecd1bbe83f07051335af1134905
@@ -85,7 +85,7 @@ stages:
     params:
       params.yaml:
         train-student:
-          lr: 0.0001
+          lr: 0.001
           epochs: 10
           batch_size: 32
           temperature: 5
@@ -94,18 +94,18 @@ stages:
     outs:
     - path: metrics/student/training_plot.png
       hash: md5
-      md5: 28ac4e8533d274d29491d042df86e19d
-      size: 27474
+      md5: fc5c8154ed807a248e523eb1009c2838
+      size: 31120
     - path: models/student.pt
       hash: md5
-      md5: 29ce2e35bf91679e4aeaaa375f8318a8
+      md5: 9e9f2aaad73fe45319ee9241d74c7368
       size: 103147868
   student_test:
     cmd: python src/student_test.py
     deps:
     - path: models/student.pt
       hash: md5
-      md5: 29ce2e35bf91679e4aeaaa375f8318a8
+      md5: 9e9f2aaad73fe45319ee9241d74c7368
       size: 103147868
     - path: src/student_test.py
       hash: md5
@@ -114,7 +114,7 @@ stages:
     params:
       params.yaml:
         train-student:
-          lr: 0.0001
+          lr: 0.001
           epochs: 10
           batch_size: 32
           temperature: 5
@@ -123,9 +123,9 @@ stages:
     outs:
     - path: metrics/student/confusion_matrix.png
       hash: md5
-      md5: 321680e7a843dd489bff73cebf2159fc
-      size: 49633
+      md5: 89d9432f1bd68ff11aa3a655c8bc3148
+      size: 51159
     - path: metrics/student/metrics.json
       hash: md5
-      md5: b057606b7626ac171a9e5343030a08d4
-      size: 110
+      md5: f2fcf2869f9afa017517488a54a33c5c
+      size: 122
