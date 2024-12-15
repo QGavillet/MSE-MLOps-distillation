@@ -42,11 +42,11 @@ stages:
     params:
       params.yaml:
         train-student:
-          lr: 5e-05
+          lr: 0.001
           epochs: 10
-          batch_size: 8
-          temperature: 3
-          alpha: 0.8
+          batch_size: 32
+          temperature: 5
+          alpha: 0.3
           subset_size: 6000
         train-teacher:
           lr: 2e-05
@@ -76,8 +76,8 @@ stages:
       size: 192128
     - path: src/student_train.py
       hash: md5
-      md5: 4b14491294a850315a5d97591de544c7
-      size: 7586
+      md5: c0945867ce61a984bfe42d59e03fc448
+      size: 9993
     - path: src/utils/utils.py
       hash: md5
       md5: 9bc58ecd1bbe83f07051335af1134905
@@ -85,47 +85,47 @@ stages:
     params:
       params.yaml:
         train-student:
-          lr: 5e-05
+          lr: 0.001
           epochs: 10
-          batch_size: 8
-          temperature: 3
-          alpha: 0.8
+          batch_size: 32
+          temperature: 5
+          alpha: 0.3
           subset_size: 6000
     outs:
     - path: metrics/student/training_plot.png
       hash: md5
-      md5: 9cb3b435fc49a300caebc67eab6e4734
-      size: 43517
+      md5: fc5c8154ed807a248e523eb1009c2838
+      size: 31120
     - path: models/student.pt
       hash: md5
-      md5: 349c79db87fae49a287e5b08b644a9ac
-      size: 9185282
+      md5: 9e9f2aaad73fe45319ee9241d74c7368
+      size: 103147868
   student_test:
     cmd: python src/student_test.py
     deps:
     - path: models/student.pt
       hash: md5
-      md5: 349c79db87fae49a287e5b08b644a9ac
-      size: 9185282
+      md5: 9e9f2aaad73fe45319ee9241d74c7368
+      size: 103147868
     - path: src/student_test.py
       hash: md5
-      md5: 54591ef7f1c6760bf53924ff6be86274
-      size: 3468
+      md5: d8d1a6986aa25256d4e8aafe4fdf9cd2
+      size: 3486
     params:
       params.yaml:
         train-student:
-          lr: 5e-05
+          lr: 0.001
           epochs: 10
-          batch_size: 8
-          temperature: 3
-          alpha: 0.8
+          batch_size: 32
+          temperature: 5
+          alpha: 0.3
           subset_size: 6000
     outs:
     - path: metrics/student/confusion_matrix.png
       hash: md5
-      md5: a79cc11985fcdf2681740f567abd9a82
-      size: 49812
+      md5: 89d9432f1bd68ff11aa3a655c8bc3148
+      size: 51159
     - path: metrics/student/metrics.json
       hash: md5
-      md5: 534d20f17c4ddcd5f63497cf8acdb0e0
-      size: 110
+      md5: f2fcf2869f9afa017517488a54a33c5c
+      size: 122

@@ -10,13 +10,14 @@ import tempfile
 import yaml
 import torch
 import torch.nn as nn
+from datasets import load_dataset
 from matplotlib import pyplot as plt
 from ray.air.integrations.wandb import setup_wandb
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import ray
 import ray.train.torch
-from utils.utils import load_data, StudentModel, collate_fn
+from transformers import ViTFeatureExtractor, ViTImageProcessor
 from utils.config import get_scaling_config, get_run_config, setup, get_ray_runtime_env
 import torch.nn.functional as F
 
@@ -41,19 +42,83 @@ def distillation_loss(y_student_pred, y_true, teacher_pred, temperature=3, alpha
     return alpha * hard_loss + (1 - alpha) * soft_loss
 
 
+class SmallCNN(nn.Module):
+    def __init__(self, num_classes=10, input_size=224):
+        super(SmallCNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout(0.5)
+
+        # Dynamically compute the size of the flattened feature map
+        self._flattened_size = self._get_flattened_size(input_size)
+
+        self.fc1 = nn.Linear(self._flattened_size, 256)
+        self.fc2 = nn.Linear(256, num_classes)
+
+    def _get_flattened_size(self, input_size):
+        with torch.no_grad():
+            x = torch.zeros(1, 3, input_size, input_size)
+            x = self.pool(F.relu(self.conv1(x)))
+            x = self.pool(F.relu(self.conv2(x)))
+            x = self.pool(F.relu(self.conv3(x)))
+        return x.numel()
+
+    def forward(self, pixel_values,):
+        x = self.pool(F.relu(self.conv1(pixel_values)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = x.view(x.size(0), -1)
+        x = self.dropout(F.relu(self.fc1(x)))
+        x = self.fc2(x)
+        return x
+
+
+def apply_student_transform(data):
+    feature_extractor = ViTImageProcessor.from_pretrained("nateraw/vit-base-patch16-224-cifar10")
+    inputs = feature_extractor(data["img"], return_tensors="pt")
+    data["pixel_values"] = inputs["pixel_values"]
+    return data
+
+
+def load_data(subset_size=None):
+    if subset_size is None or subset_size == "None":
+        data = load_dataset('cifar10')
+        train_ds = data['train']
+        test_ds = data['test']
+    else:
+        train_size = int(subset_size * 0.8)
+        test_size = subset_size - train_size
+        train_split = 'train[:{}]'.format(train_size)
+        test_split = 'test[:{}]'.format(test_size)
+        train_ds, test_ds = load_dataset('cifar10', split=[train_split, test_split])
+
+    print(f"Train size: {len(train_ds)}, Test size: {len(test_ds)}")
+
+    train_ds.set_transform(apply_student_transform)
+    test_ds.set_transform(apply_student_transform)
+
+    return train_ds, test_ds
+
+
+def collate_fn(data):
+    pixel_values = torch.stack([sample["pixel_values"] for sample in data])
+    labels = torch.tensor([sample["label"] for sample in data])
+    return {"pixel_values": pixel_values, "labels": labels}
+
+
 # Ray training function
 def train_func(config):
     # Initialize models and prepare for distributed training
-    student = StudentModel()
+    student = SmallCNN()
     student = student.to(device)
     student = ray.train.torch.prepare_model(student)
 
     # Transform and DataLoader
     student_train_data, student_val_data = load_data(subset_size=config["subset_size"])
-    student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False,
-                                      collate_fn=collate_fn)
-    student_val_loader = DataLoader(student_val_data, batch_size=4, shuffle=False,
-                                    collate_fn=collate_fn)
+    student_train_loader = DataLoader(student_train_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
+    student_val_loader = DataLoader(student_val_data, batch_size=config["batch_size"], shuffle=False, collate_fn=collate_fn)
     student_train_loader = ray.train.torch.prepare_data_loader(student_train_loader)
     student_val_loader = ray.train.torch.prepare_data_loader(student_val_loader)
 

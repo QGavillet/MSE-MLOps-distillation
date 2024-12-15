@@ -5,7 +5,9 @@ import pytz
 import yaml
 from matplotlib import pyplot as plt
 import numpy as np
-from utils.utils import StudentModel, collate_fn
+
+from student_train import SmallCNN
+from utils.utils import collate_fn
 from utils.utils import load_data
 from utils.config import setup
 import torch
@@ -81,7 +83,7 @@ if __name__ == '__main__':
     setup()
 
     # Load the trained model
-    trained_model = StudentModel()
+    trained_model = SmallCNN()
     checkpoint = torch.load(args.model_path, weights_only=True)
     checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
     trained_model.load_state_dict(checkpoint)
